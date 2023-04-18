@@ -14,9 +14,15 @@ func NewProductPostgres(db *gorm.DB) *ProductPostgres {
 }
 
 func (p *ProductPostgres) GetAll() ([]models.Product, error) {
-	return nil, nil
+	var products []models.Product
+	if err := p.db.Find(&products).Error; err != nil {
+		return nil, err
+	}
+
+	return products, nil
 }
 func (p *ProductPostgres) CreateProduct(userId uint, product models.Product) (uint, error) { // product id, error
+	
 	return 0, nil
 }
 func (p *ProductPostgres) GetAllSellerProduct(userId uint) ([]models.Product, error) {

@@ -25,9 +25,9 @@ func (h *Handler) Routes() *gin.Engine {
 		auth.GET("/sign-in", h.signIn)
 	}
 
-	product := ecommerce.Group("/products")
+	product := ecommerce.Group("/products", h.UserIdentify)
 	{
-		product.GET("/", h.CreateProduct)
+		product.GET("/", h.GetAll)
 	}
 
 	return router

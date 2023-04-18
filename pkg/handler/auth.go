@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"fmt"
 	"github.com/aalmat/e-commerce/models"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -36,8 +35,6 @@ func (h *Handler) signIn(ctx *gin.Context) {
 		newErrorResponse(ctx, http.StatusBadRequest, err.Error())
 		return
 	}
-
-	fmt.Print(input.Email)
 
 	token, err := h.service.Authorization.GenerateToken(input.Email, input.Password)
 	if err != nil {

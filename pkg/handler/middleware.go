@@ -4,9 +4,33 @@ import (
 	"errors"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"strings"
 )
 
 const userCtx = "userId"
+const AuthHeader = "Authorization"
+
+func (h *Handler) UserIdentify(ctx *gin.Context) {
+	header := ctx.GetHeader(AuthHeader)
+	if header == "" {
+		newErrorResponse(ctx, http.StatusUnauthorized, "header is empty")
+		return
+	}
+
+	headers := strings.Split(header, " ")
+	if len(headers) != 2 {
+		newErrorResponse(ctx, http.StatusUnauthorized, "wrong header format")
+		return
+	}
+
+	id, err := h.service.ParseToken(headers[1])
+	if err != nil {
+		newErrorResponse(ctx, http.StatusUnauthorized, err.Error())
+		return
+	}
+	ctx.Set(userCtx, id)
+
+}
 
 func GetUserId(ctx *gin.Context) (uint, error) {
 	id, ok := ctx.Get(userCtx)
