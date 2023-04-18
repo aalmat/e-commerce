@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"github.com/aalmat/e-commerce/models"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -24,6 +25,26 @@ func (h *Handler) signUp(ctx *gin.Context) {
 
 }
 
-func (h *Handler) signIn(stx *gin.Context) {
+type SignUser struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+func (h *Handler) signIn(ctx *gin.Context) {
+	var input SignUser
+	if err := ctx.BindJSON(&input); err != nil {
+		newErrorResponse(ctx, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	fmt.Print(input.Email)
+
+	token, err := h.service.Authorization.GenerateToken(input.Email, input.Password)
+	if err != nil {
+		newErrorResponse(ctx, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	ctx.JSON(http.StatusOK, map[string]interface{}{"token": token})
 
 }

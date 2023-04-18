@@ -33,7 +33,7 @@ func main() {
 		logrus.Fatalf("DB connection error: %s", err.Error())
 	}
 
-	db.AutoMigrate(&models.User{})
+	db.AutoMigrate(&models.User{}, &models.Cart{}, &models.Product{})
 
 	repos := repository.NewRepostitory(db)
 	services := service.NewService(repos)
@@ -43,6 +43,7 @@ func main() {
 	if err := server.Run(viper.GetString("port"), handlers.Routes()); err != nil {
 		logrus.Fatalf("server error: %s", err.Error())
 	}
+
 }
 
 func initConfig() error {

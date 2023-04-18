@@ -5,6 +5,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+const BasePage = "/market"
+
 type Handler struct {
 	service *service.Service
 }
@@ -16,9 +18,16 @@ func NewHandler(service *service.Service) *Handler {
 func (h *Handler) Routes() *gin.Engine {
 	router := gin.New()
 
-	auth := router.Group("/auth")
+	ecommerce := router.Group(BasePage)
+	auth := ecommerce.Group("/auth")
 	{
 		auth.POST("/sign-up", h.signUp)
+		auth.GET("/sign-in", h.signIn)
+	}
+
+	product := ecommerce.Group("/products")
+	{
+		product.GET("/", h.CreateProduct)
 	}
 
 	return router
