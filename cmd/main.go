@@ -33,7 +33,7 @@ func main() {
 		logrus.Fatalf("DB connection error: %s", err.Error())
 	}
 
-	db.AutoMigrate(&models.User{}, &models.Cart{}, &models.Product{})
+	db.AutoMigrate(&models.User{}, &models.Cart{}, &models.Product{}, &models.Rating{})
 
 	repos := repository.NewRepostitory(db)
 	services := service.NewService(repos)

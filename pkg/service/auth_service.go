@@ -5,6 +5,7 @@ import (
 	"github.com/aalmat/e-commerce/models"
 	"github.com/aalmat/e-commerce/pkg/repository"
 	"github.com/dgrijalva/jwt-go"
+	"golang.org/x/crypto/bcrypt"
 	"time"
 )
 
@@ -21,51 +22,62 @@ func NewAuthService(repository repository.Authorization) *AuthService {
 	}
 }
 
-func (s *AuthService) CreateUser(user models.User) (uint, error) {
-	return s.repository.CreateUser(user)
+func (a *AuthService) CreateUser(user models.User) (uint, error) {
+	return a.repository.CreateUser(user)
 }
 
-type TokenClaim struct {
+type TokenClaims struct {
 	jwt.StandardClaims
-	userId uint `json:"user_id"`
+	UserId   uint        `json:"user_id"`
+	UserRole models.Role `json:"user_role"`
 }
 
-func (s *AuthService) GenerateToken(email, password string) (string, error) {
+func (a *AuthService) GenerateToken(username, password string) (string, error) {
+	//hash, err := generatePassword(password)
+	//if err != nil {
+	//	return "", err
+	//}
+	user, err := a.repository.GetUser(username, password)
 
-	user, err := s.repository.GetUser(email, password)
 	if err != nil {
 		return "", err
 	}
+	//fmt.Println(password)
 
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, &TokenClaim{
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, &TokenClaims{
 		jwt.StandardClaims{
 			ExpiresAt: time.Now().Add(TokenTime).Unix(),
 			IssuedAt:  time.Now().Unix(),
 		},
 		user.ID,
-	},
-	)
+		user.UserType,
+	})
 
-	t, err := token.SignedString([]byte(signInKey))
-	if err != nil {
-		return "", err
-	}
-	return t, nil
+	return token.SignedString([]byte(signInKey))
+
 }
 
-func (s *AuthService) ParseToken(token string) (uint, error) {
-	var userClaim TokenClaim
+func (a *AuthService) ParseToken(token string) (uint, models.Role, error) {
+	t, err := jwt.ParseWithClaims(token, &TokenClaims{}, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, errors.New("invalid sign in method")
+		}
 
-	t, err := jwt.ParseWithClaims(token, &userClaim, func(token *jwt.Token) (interface{}, error) {
 		return []byte(signInKey), nil
 	})
+
 	if err != nil {
-		return 0, err
+		return 0, models.Client, err
 	}
 
-	if !t.Valid {
-		return 0, errors.New("invalid token")
+	claims, ok := t.Claims.(*TokenClaims)
+	if !ok {
+		return 0, models.Client, errors.New("invalid token claims")
 	}
+	return claims.UserId, claims.UserRole, nil
+}
 
-	return userClaim.userId, nil
+func generatePassword(password string) (string, error) {
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), 14)
+	return string(hash), err
 }

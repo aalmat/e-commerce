@@ -3,6 +3,7 @@ package repository
 import (
 	"github.com/aalmat/e-commerce/models"
 	"github.com/jinzhu/gorm"
+	"time"
 )
 
 type ProductPostgres struct {
@@ -21,9 +22,15 @@ func (p *ProductPostgres) GetAll() ([]models.Product, error) {
 
 	return products, nil
 }
-func (p *ProductPostgres) CreateProduct(userId uint, product models.Product) (uint, error) { // product id, error
-	
-	return 0, nil
+
+func (p *ProductPostgres) CreateProduct(sellerID uint, product models.Product) (uint, error) { // product id, error
+	product.CreatedAt = time.Now()
+	product.UpdatedAt = time.Now()
+	product.UserID = sellerID
+	if err := p.db.Select("title", "description", "photo", "price", "user_id", "created_at", "updated_at", "quantity").Create(&product).Error; err != nil {
+		return 0, err
+	}
+	return product.ID, nil
 }
 func (p *ProductPostgres) GetAllSellerProduct(userId uint) ([]models.Product, error) {
 	return nil, nil

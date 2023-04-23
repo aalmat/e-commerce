@@ -8,9 +8,6 @@ type Product struct {
 	Description string `json:"description" binding:"required"`
 	Photo       string `json:"photo" binding:"required"`
 	Price       int    `json:"price" binding:"required"`
-	SellerID    uint   `json:"sellerID" binding:"required"`
-	Rating      int    `json:"rating"`
-	RateCount   int    `json:"rateCount"`
-	RateAmount  int    `json:"rateAmount"`
-	User        User   `gorm:"foreignKey:SellerID"`
+	UserID      uint   `json:"userId" gorm:"ForeignKey:User.ID"`
+	Quantity    uint   `json:"quantity"`
 }

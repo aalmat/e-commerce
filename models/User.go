@@ -16,6 +16,6 @@ type Role int
 
 const (
 	Admin  Role = 1
-	client Role = 2
+	Client Role = 2
 	Seller Role = 3
 )
