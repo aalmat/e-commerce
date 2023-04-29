@@ -28,7 +28,7 @@ func (h *Handler) Routes() *gin.Engine {
 	seller := ecommerce.Group("/seller", h.UserIdentify)
 	{
 		seller.GET("/", h.GetAll)
-		seller.POST("/", h.CreateProduct)
+		seller.POST("/", h.AddProduct)
 	}
 
 	return router

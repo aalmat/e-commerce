@@ -23,11 +23,25 @@ func (p *SellerPostgres) GetAll() ([]models.Product, error) {
 	return products, nil
 }
 
-func (p *SellerPostgres) CreateProduct(sellerID uint, product models.Product) (uint, error) { // product id, error
+func (p *SellerPostgres) AddProduct(house models.WareHouse) (uint, error) { // product id, error
+	if err := p.db.Select("product_id", "user_id", "quantity", "price").Create(&house).Error; err != nil {
+		return 0, err
+	}
+
+	p.UpdateQuantity(house.ProductId, int(house.Quantity))
+
+	return house.ID, nil
+
+}
+
+func (p *SellerPostgres) UpdateQuantity(productId uint, quantity int) error {
+	return nil
+}
+
+func (p *SellerPostgres) CreateProduct(product models.Product) (uint, error) { // product id, error
 	product.CreatedAt = time.Now()
 	product.UpdatedAt = time.Now()
-	product.UserID = sellerID
-	if err := p.db.Select("title", "description", "photo", "price", "user_id", "created_at", "updated_at", "quantity").Create(&product).Error; err != nil {
+	if err := p.db.Select("title", "description", "photo", "created_at", "updated_at", "quantity").Create(&product).Error; err != nil {
 		return 0, err
 	}
 	return product.ID, nil

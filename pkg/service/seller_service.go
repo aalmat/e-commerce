@@ -9,8 +9,8 @@ type SellerService struct {
 	repository repository.Seller
 }
 
-func (s SellerService) CreateProduct(sellerID uint, product models.Product) (uint, error) {
-	return s.repository.CreateProduct(sellerID, product)
+func (s SellerService) AddProduct(product models.WareHouse) (uint, error) {
+	return s.repository.AddProduct(product)
 }
 
 func (s SellerService) GetAllSellerProduct(userId uint) ([]models.Product, error) {

@@ -12,7 +12,7 @@ type Authorization interface {
 }
 
 type Seller interface {
-	CreateProduct(sellerID uint, product models.Product) (uint, error) // product id, error
+	AddProduct(product models.WareHouse) (uint, error) // product id, error
 	GetAllSellerProduct(userId uint) ([]models.Product, error)
 }
 
@@ -31,7 +31,8 @@ type Client interface {
 }
 
 type Admin interface {
-	DeleteUser(userId uint) error
+	DeleteProduct(productId uint) error
+	CreateProduct(product models.Product) (uint, error)
 }
 
 type Service struct {
@@ -39,6 +40,7 @@ type Service struct {
 	Product
 	Seller
 	Client
+	Admin
 }
 
 func NewService(repo *repository.Repository) *Service {
@@ -46,6 +48,7 @@ func NewService(repo *repository.Repository) *Service {
 		NewAuthService(repo.Authorization),
 		NewProductService(repo.Product),
 		NewSellerService(repo.Seller),
-		NewClientService(repo),
+		NewClientService(repo.Client),
+		NewAdminService(repo.Admin),
 	}
 }

@@ -1,9 +1,12 @@
 package models
 
-import "time"
+import (
+	"github.com/jinzhu/gorm"
+	"time"
+)
 
 type Order struct {
-	ID           uint      `json:"id"`
+	gorm.Model
 	UserID       uint      `json:"user_id" binding:"required" gorm:"ForeignKey:User.ID"`
 	ProductID    uint      `json:"product_id" binding:"required" gorm:"ForeignKey:Product.ID"`
 	Quantity     uint      `json:"quantity" binding:"required"`

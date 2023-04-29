@@ -1,9 +1,11 @@
 package models
 
+import "github.com/jinzhu/gorm"
+
 type WareHouse struct {
-	ID        uint `json:"ID"`
+	gorm.Model
 	ProductId uint `json:"product_Id" gorm:"ForeignKey:Product.ID"`
 	Quantity  uint `json:"quantity"`
-	UserID    uint `json:"userId" gorm:"ForeignKey:User.ID"`
-	Price     int  `json:"price" binding:"required"`
+	UserID    uint `json:"user_id" gorm:"ForeignKey:User.ID"`
+	Price     uint `json:"price" binding:"required"`
 }

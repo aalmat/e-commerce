@@ -11,7 +11,7 @@ type Authorization interface {
 }
 
 type Seller interface {
-	CreateProduct(sellerID uint, product models.Product) (uint, error) // product id, error
+	AddProduct(product models.WareHouse) (uint, error) // product id, error
 	GetAllSellerProduct(userId uint) ([]models.Product, error)
 }
 
@@ -30,7 +30,8 @@ type Client interface {
 }
 
 type Admin interface {
-	DeleteUser(userId uint) error
+	CreateProduct(product models.Product) (uint, error)
+	DeleteProduct(productId uint) error
 }
 
 type Repository struct {
@@ -38,6 +39,7 @@ type Repository struct {
 	Seller
 	Product
 	Client
+	Admin
 }
 
 func NewRepostitory(db *gorm.DB) *Repository {
@@ -46,5 +48,6 @@ func NewRepostitory(db *gorm.DB) *Repository {
 		NewSellerPostgres(db),
 		NewProductPostgres(db),
 		NewClientPostgres(db),
+		NewAdminPostgres(db),
 	}
 }
