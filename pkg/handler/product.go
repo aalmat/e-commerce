@@ -8,13 +8,13 @@ import (
 )
 
 func (h *Handler) CreateProduct(ctx *gin.Context) {
-	sellerId, err := GetUserId(ctx)
+	sellerId, err := h.GetUserId(ctx)
 	//fmt.Println(sellerId)
 	if err != nil {
 		logrus.Println(err.Error())
 		return
 	}
-	role, err := GetUserRole(ctx)
+	role, err := h.GetUserRole(ctx)
 	if err != nil {
 		logrus.Println(err.Error())
 		return
@@ -44,6 +44,7 @@ func (h *Handler) CreateProduct(ctx *gin.Context) {
 	})
 
 }
+
 
 type GetAllListsResponse struct {
 	Data []models.Product `json:"data"`

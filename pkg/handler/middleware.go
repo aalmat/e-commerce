@@ -9,65 +9,58 @@ import (
 )
 
 const (
-	AuthHeader = "Authorization"
-	userCtx    = "userId"
-	userRole   = "userRole"
+	Authorization = "Authorization"
+	UserId        = "userId"
+	UserRole      = "userRole"
 )
 
-func (h *Handler) UserIdentify(c *gin.Context) {
-	header := c.GetHeader(AuthHeader)
+func (h *Handler) UserIdentify(ctx *gin.Context) {
+	header := ctx.GetHeader(Authorization)
 	if header == "" {
-		newErrorResponse(c, http.StatusUnauthorized, "header is empty")
-		return
+		newErrorResponse(ctx, http.StatusBadRequest, "header is empty")
 	}
 
 	headers := strings.Split(header, " ")
 	if len(headers) != 2 {
-		newErrorResponse(c, http.StatusUnauthorized, "wrong header format")
-		return
+		newErrorResponse(ctx, http.StatusBadRequest, "wrong header format")
 	}
 
-	userId, role, err := h.service.ParseToken(headers[1])
+	token := headers[1]
+	id, role, err := h.service.Authorization.ParseToken(token)
 	if err != nil {
-		newErrorResponse(c, http.StatusUnauthorized, err.Error())
-		return
+		newErrorResponse(ctx, http.StatusInternalServerError, err.Error())
 	}
-
-	c.Set(userCtx, userId)
-	c.Set(userRole, role)
+	ctx.Set(UserId, id)
+	ctx.Set(UserRole, role)
 }
 
-func GetUserId(c *gin.Context) (uint, error) {
-	id, ok := c.Get(userCtx)
-
+func (h *Handler) GetUserId(ctx *gin.Context) (uint, error) {
+	id, ok := ctx.Get(UserId)
 	if !ok {
-		newErrorResponse(c, http.StatusInternalServerError, "user not found")
+		newErrorResponse(ctx, http.StatusBadRequest, "user not found")
 		return 0, errors.New("user not found")
 	}
 
 	intId, ok := id.(uint)
 
 	if !ok {
-		newErrorResponse(c, http.StatusInternalServerError, "User id invalid type")
+		newErrorResponse(ctx, http.StatusInternalServerError, "User id invalid type")
 		return 0, errors.New("user id invalid type")
 	}
 	return intId, nil
 }
 
-func GetUserRole(c *gin.Context) (models.Role, error) {
-	role, ok := c.Get(userRole)
-
+func (h *Handler) GetUserRole(ctx *gin.Context) (models.Role, error) {
+	role, ok := ctx.Get(UserRole)
 	if !ok {
-		newErrorResponse(c, http.StatusInternalServerError, "user not found")
-		return 0, errors.New("user not found")
+		newErrorResponse(ctx, http.StatusBadRequest, "role not found")
+		return 0, errors.New("role not found")
+	}
+	conRole, ok := role.(models.Role)
+	if !ok {
+		newErrorResponse(ctx, http.StatusBadRequest, "role not found")
+		return 0, errors.New("role not found")
 	}
 
-	r, ok := role.(models.Role)
-
-	if !ok {
-		newErrorResponse(c, http.StatusInternalServerError, "User role invalid type")
-		return 0, errors.New("user role invalid type")
-	}
-
-	return r, nil
+	return conRole, nil
 }

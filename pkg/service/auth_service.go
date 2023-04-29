@@ -5,7 +5,6 @@ import (
 	"github.com/aalmat/e-commerce/models"
 	"github.com/aalmat/e-commerce/pkg/repository"
 	"github.com/dgrijalva/jwt-go"
-	"golang.org/x/crypto/bcrypt"
 	"time"
 )
 
@@ -26,25 +25,12 @@ func (a *AuthService) CreateUser(user models.User) (uint, error) {
 	return a.repository.CreateUser(user)
 }
 
-type TokenClaims struct {
-	jwt.StandardClaims
-	UserId   uint        `json:"user_id"`
-	UserRole models.Role `json:"user_role"`
-}
-
-func (a *AuthService) GenerateToken(username, password string) (string, error) {
-	//hash, err := generatePassword(password)
-	//if err != nil {
-	//	return "", err
-	//}
-	user, err := a.repository.GetUser(username, password)
-
+func (a *AuthService) GenerateToken(email, password string) (string, error) {
+	user, err := a.repository.GetUser(email, password)
 	if err != nil {
 		return "", err
 	}
-	//fmt.Println(password)
-
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, &TokenClaims{
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, &MyClaims{
 		jwt.StandardClaims{
 			ExpiresAt: time.Now().Add(TokenTime).Unix(),
 			IssuedAt:  time.Now().Unix(),
@@ -54,11 +40,10 @@ func (a *AuthService) GenerateToken(username, password string) (string, error) {
 	})
 
 	return token.SignedString([]byte(signInKey))
-
 }
 
-func (a *AuthService) ParseToken(token string) (uint, models.Role, error) {
-	t, err := jwt.ParseWithClaims(token, &TokenClaims{}, func(token *jwt.Token) (interface{}, error) {
+func (a *AuthService) ParseToken(tokenString string) (uint, models.Role, error) {
+	t, err := jwt.ParseWithClaims(tokenString, &MyClaims{}, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, errors.New("invalid sign in method")
 		}
@@ -70,14 +55,16 @@ func (a *AuthService) ParseToken(token string) (uint, models.Role, error) {
 		return 0, models.Client, err
 	}
 
-	claims, ok := t.Claims.(*TokenClaims)
+	claims, ok := t.Claims.(*MyClaims)
 	if !ok {
 		return 0, models.Client, errors.New("invalid token claims")
 	}
 	return claims.UserId, claims.UserRole, nil
+
 }
 
-func generatePassword(password string) (string, error) {
-	hash, err := bcrypt.GenerateFromPassword([]byte(password), 14)
-	return string(hash), err
+type MyClaims struct {
+	jwt.StandardClaims
+	UserId   uint        `json:"user_id"`
+	UserRole models.Role `json:"user_role"`
 }
