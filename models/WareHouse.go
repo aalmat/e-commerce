@@ -9,3 +9,9 @@ type WareHouse struct {
 	UserID    uint `json:"user_id" gorm:"ForeignKey:User.ID"`
 	Price     uint `json:"price" binding:"required"`
 }
+
+type UpdateWareHouse struct {
+	ProductId uint `json:"product_Id"`
+	Quantity  uint `json:"quantity"`
+	Price     uint `json:"price"`
+}

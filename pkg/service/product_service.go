@@ -19,12 +19,3 @@ func (p ProductService) GetAll() ([]models.Product, error) {
 func (p *ProductService) GetById(userId uint, productId uint) (models.Product, error) {
 	return p.repository.GetById(userId, productId)
 }
-func (p *ProductService) SearchByName(keyword string) ([]models.Product, error) {
-	return p.repository.SearchByName(keyword)
-}
-func (p *ProductService) FilterByPrice(minPrice, maxPrice int) ([]models.Product, error) {
-	return p.repository.FilterByPrice(minPrice, maxPrice)
-}
-func (p *ProductService) FilterByRating(minRate, maxRate int) ([]models.Product, error) {
-	return p.repository.FilterByRating(minRate, maxRate)
-}

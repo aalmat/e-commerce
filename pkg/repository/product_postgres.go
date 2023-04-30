@@ -19,21 +19,6 @@ func (p ProductPostgres) GetById(userId uint, productId uint) (models.Product, e
 	panic("implement me")
 }
 
-func (p ProductPostgres) SearchByName(keyword string) ([]models.Product, error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (p ProductPostgres) FilterByPrice(minPrice, maxPrice int) ([]models.Product, error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (p ProductPostgres) FilterByRating(minRate, maxRate int) ([]models.Product, error) {
-	//TODO implement me
-	panic("implement me")
-}
-
 func NewProductPostgres(db *gorm.DB) *ProductPostgres {
 	return &ProductPostgres{db}
 }

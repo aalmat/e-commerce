@@ -45,3 +45,22 @@ func (h *Handler) AddProduct(ctx *gin.Context) {
 	})
 
 }
+
+func (h *Handler) GetSellerProduct(ctx *gin.Context) {
+	sellerId, err := h.GetUserId(ctx)
+	//fmt.Println(sellerId)
+	if err != nil {
+		logrus.Println(err.Error())
+		return
+	}
+
+	products, err := h.service.Seller.GetAllSellerProduct(sellerId)
+	if err != nil {
+		newErrorResponse(ctx, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	ctx.JSON(http.StatusOK, models.GetAllWareHousesResponse{
+		products,
+	})
+}

@@ -10,12 +10,22 @@ type SellerPostgres struct {
 	db *gorm.DB
 }
 
+func (p *SellerPostgres) DeleteProduct(productId uint) error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (p *SellerPostgres) UpdateProduct(productId uint, update models.UpdateWareHouse) error {
+	//TODO implement me
+	panic("implement me")
+}
+
 func NewSellerPostgres(db *gorm.DB) *SellerPostgres {
 	return &SellerPostgres{db: db}
 }
 
-func (p *SellerPostgres) GetAll() ([]models.Product, error) {
-	var products []models.Product
+func (p *SellerPostgres) GetAll() ([]models.WareHouse, error) {
+	var products []models.WareHouse
 	if err := p.db.Find(&products).Error; err != nil {
 		return nil, err
 	}
@@ -46,18 +56,18 @@ func (p *SellerPostgres) CreateProduct(product models.Product) (uint, error) { /
 	}
 	return product.ID, nil
 }
-func (p *SellerPostgres) GetAllSellerProduct(userId uint) ([]models.Product, error) {
+func (p *SellerPostgres) GetAllSellerProduct(userId uint) ([]models.WareHouse, error) {
 	return nil, nil
 }
-func (p *SellerPostgres) GetById(userId uint, productId uint) (models.Product, error) {
-	return models.Product{}, nil
+func (p *SellerPostgres) GetById(userId uint, productId uint) (models.WareHouse, error) {
+	return models.WareHouse{}, nil
 }
 func (p *SellerPostgres) SearchByName(keyword string) ([]models.Product, error) {
 	return nil, nil
 }
-func (p *SellerPostgres) FilterByPrice(minPrice, maxPrice int) ([]models.Product, error) {
+func (p *SellerPostgres) FilterByPrice(minPrice, maxPrice int) ([]models.WareHouse, error) {
 	return nil, nil
 }
-func (p *SellerPostgres) FilterByRating(minRate, maxRate int) ([]models.Product, error) {
+func (p *SellerPostgres) FilterByRating(minRate, maxRate int) ([]models.WareHouse, error) {
 	return nil, nil
 }

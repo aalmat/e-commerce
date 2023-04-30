@@ -10,3 +10,11 @@ type Product struct {
 	Quantity    uint   `json:"quantity"`
 	Rating      uint   `json:"rating"`
 }
+
+type ProductUpdate struct {
+	Title       string `json:"title"`
+	Description string `json:"description"`
+	Photo       string `json:"photo"`
+	Quantity    uint   `json:"quantity"`
+	Rating      uint   `json:"rating"`
+}

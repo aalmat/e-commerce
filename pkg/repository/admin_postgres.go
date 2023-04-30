@@ -9,12 +9,23 @@ type AdminPostgres struct {
 	db *gorm.DB
 }
 
-func (a AdminPostgres) CreateProduct(product models.Product) (uint, error) {
+func (a *AdminPostgres) UpdateProduct(productId uint, update models.ProductUpdate) error {
+	//TODO implement me
+	panic("implement me")
+	return nil
+}
+
+func (a *AdminPostgres) GetProducts() ([]models.Product, error) {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (a AdminPostgres) DeleteProduct(productId uint) error {
+func (a *AdminPostgres) CreateProduct(product models.Product) (uint, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (a *AdminPostgres) DeleteProduct(productId uint) error {
 	//TODO implement me
 	panic("implement me")
 }

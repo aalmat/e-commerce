@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	e_commerce "github.com/aalmat/e-commerce"
 	"github.com/aalmat/e-commerce/models"
 	"github.com/aalmat/e-commerce/pkg/handler"
@@ -10,6 +11,8 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"os"
+	"os/signal"
+	"syscall"
 )
 
 func main() {
@@ -40,8 +43,23 @@ func main() {
 	handlers := handler.NewHandler(services)
 
 	server := new(e_commerce.Server)
-	if err := server.Run(viper.GetString("port"), handlers.Routes()); err != nil {
-		logrus.Fatalf("server error: %s", err.Error())
+	go func() {
+		if err := server.Run(viper.GetString("port"), handlers.Routes()); err != nil {
+			logrus.Fatalf("server error: %s", err.Error())
+		}
+	}()
+
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGTERM, syscall.SIGINT)
+	<-quit
+
+	logrus.Println("APP is shutting down")
+	if err := server.Shutdown(context.Background()); err != nil {
+		logrus.Errorf("Error occured on server shutting down: %s", err.Error())
+	}
+
+	if err := db.Close(); err != nil {
+		logrus.Errorf("Error occured on dateabase closing: %s", err.Error())
 	}
 
 }

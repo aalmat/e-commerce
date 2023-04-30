@@ -13,26 +13,31 @@ type Authorization interface {
 
 type Seller interface {
 	AddProduct(product models.WareHouse) (uint, error) // product id, error
-	GetAllSellerProduct(userId uint) ([]models.Product, error)
+	GetAllSellerProduct(userId uint) ([]models.WareHouse, error)
+	DeleteProduct(productId uint) error
+	UpdateProduct(productId uint, update models.UpdateWareHouse) error
 }
 
 type Product interface {
 	GetAll() ([]models.Product, error)
 	GetById(userId uint, productId uint) (models.Product, error)
-	SearchByName(keyword string) ([]models.Product, error)
-	FilterByPrice(minPrice, maxPrice int) ([]models.Product, error)
-	FilterByRating(minRate, maxRate int) ([]models.Product, error)
 }
 
 type Client interface {
-	AddToCart(productId uint, quantity uint) (uint, error)
-	ShowCartProducts() ([]models.Product, error)
-	DeleteFromCart(productId uint, quantity uint) (uint, error)
+	AddToCart(userId uint, productId uint, quantity uint) (uint, error)
+	ShowCartProducts(userid uint) ([]models.WareHouse, error)
+	DeleteFromCart(userid uint, productId uint) error
+	ChangeProductQuantity(userid uint, productId uint, quantity uint) (uint, error)
+	SearchByName(keyword string) ([]models.WareHouse, error)
+	FilterByPrice(minPrice, maxPrice int) ([]models.WareHouse, error)
+	FilterByRating(minRate, maxRate int) ([]models.WareHouse, error)
 }
 
 type Admin interface {
 	DeleteProduct(productId uint) error
 	CreateProduct(product models.Product) (uint, error)
+	GetProducts() ([]models.Product, error)
+	UpdateProduct(productId uint, update models.ProductUpdate) error
 }
 
 type Service struct {
