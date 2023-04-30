@@ -28,11 +28,15 @@ func (h *Handler) AddProduct(ctx *gin.Context) {
 		return
 	}
 
+	id := ctx.Param("id")
+	uid, err := strconv.ParseUint(id, 10, 64)
+
 	var input models.WareHouse
 	if err := ctx.BindJSON(&input); err != nil {
 		newErrorResponse(ctx, http.StatusBadRequest, err.Error())
 		return
 	}
+	input.ProductId = uint(uid)
 
 	productId, err := h.service.Seller.AddProduct(sellerId, input)
 	if err != nil {

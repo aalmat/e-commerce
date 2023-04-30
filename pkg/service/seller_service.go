@@ -25,6 +25,10 @@ func (s *SellerService) GetAllSellerProduct(userId uint) ([]models.WareHouse, er
 	return s.repository.GetAllSellerProduct(userId)
 }
 
+func (s *SellerService) IncreaseProductQuantity(productId, quantity uint) error {
+	return s.repository.IncreaseProductQuantity(productId, quantity)
+}
+
 func NewSellerService(repo repository.Seller) *SellerService {
 	return &SellerService{repo}
 }

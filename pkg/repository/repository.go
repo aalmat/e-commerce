@@ -15,6 +15,7 @@ type Seller interface {
 	GetAllSellerProduct(sellerId uint) ([]models.WareHouse, error)
 	DeleteProduct(sellerId, productId uint) error
 	UpdateProduct(sellerId, productId uint, update models.UpdateWareHouse) error
+	IncreaseProductQuantity(productId, quantity uint) error
 }
 
 type Product interface {
@@ -27,9 +28,9 @@ type Client interface {
 	ShowCartProducts(userId uint) ([]models.WareHouse, error)
 	DeleteFromCart(userid uint, productId uint) error
 	ChangeProductQuantity(userid uint, productId uint, quantity uint) (uint, error)
-	SearchByName(keyword string) ([]models.WareHouse, error)
-	FilterByPrice(minPrice, maxPrice int) ([]models.WareHouse, error)
-	FilterByRating(minRate, maxRate int) ([]models.WareHouse, error)
+	WriteComment(userId, productId uint, commentText string) (uint, error)
+	RateProduct(userId, productId uint, rate uint) (uint, error)
+	SearchByName(keyword string) ([]models.Product, error)
 }
 
 type Admin interface {

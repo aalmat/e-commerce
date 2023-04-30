@@ -33,7 +33,7 @@ func (h *Handler) AddToCart(ctx *gin.Context) {
 	//fmt.Println(role)
 
 	if role != models.Client {
-		newErrorResponse(ctx, http.StatusBadRequest, "you are not client")
+		newErrorResponse(ctx, http.StatusUnauthorized, "you are not client")
 		return
 	}
 
@@ -169,6 +169,92 @@ func (h *Handler) ChangeProductQuantity(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, map[string]interface{}{
 		"cart id": cartId,
+	})
+
+}
+
+func (h *Handler) WriteComment(ctx *gin.Context) {
+	userId, err := h.GetUserId(ctx)
+	//fmt.Println(sellerId)
+	if err != nil {
+		logrus.Println(err.Error())
+		return
+	}
+	role, err := h.GetUserRole(ctx)
+	if err != nil {
+		logrus.Println(err.Error())
+		return
+	}
+
+	//fmt.Println(role)
+
+	if role != models.Client {
+		newErrorResponse(ctx, http.StatusUnauthorized, "you are not client")
+		return
+	}
+
+	id := ctx.Param("id")
+	productId, err := strconv.ParseUint(id, 10, 64)
+	if err != nil {
+		newErrorResponse(ctx, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	var commentText string
+	if err := ctx.BindJSON(&commentText); err != nil {
+		newErrorResponse(ctx, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	commentId, err := h.service.Client.WriteComment(userId, uint(productId), commentText)
+	if err := ctx.BindJSON(&commentText); err != nil {
+		newErrorResponse(ctx, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	ctx.JSON(http.StatusOK, map[string]interface{}{
+		"id": commentId,
+	})
+
+}
+
+func (h *Handler) RateProduct(ctx *gin.Context) {
+	userId, err := h.GetUserId(ctx)
+	//fmt.Println(sellerId)
+	if err != nil {
+		logrus.Println(err.Error())
+		return
+	}
+	role, err := h.GetUserRole(ctx)
+	if err != nil {
+		logrus.Println(err.Error())
+		return
+	}
+
+	//fmt.Println(role)
+
+	if role != models.Client {
+		newErrorResponse(ctx, http.StatusUnauthorized, "you are not client")
+		return
+	}
+
+	id := ctx.Param("id")
+	productId, err := strconv.ParseUint(id, 10, 64)
+	if err != nil {
+		newErrorResponse(ctx, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	var rate uint
+	if err := ctx.BindJSON(&rate); err != nil {
+		newErrorResponse(ctx, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	rateId, err := h.service.Client.RateProduct(userId, uint(productId), rate)
+
+	ctx.JSON(http.StatusOK, map[string]interface{}{
+		"id": rateId,
 	})
 
 }

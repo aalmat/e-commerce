@@ -34,13 +34,20 @@ func (p *SellerPostgres) GetAll() ([]models.WareHouse, error) {
 }
 
 func (p *SellerPostgres) AddProduct(sellerId uint, house models.WareHouse) (uint, error) { // product id, error
+	tx := p.db.Begin()
 	house.UserID = sellerId
-
-	if err := p.db.Select("product_id", "user_id", "quantity", "price").Create(&house).Error; err != nil {
+	house.CreatedAt = time.Now()
+	house.UpdatedAt = time.Now()
+	if err := tx.Select("product_id", "user_id", "quantity", "price", "created_at", "updated_at").Create(&house).Error; err != nil {
+		tx.Rollback()
 		return 0, err
 	}
 
-	p.UpdateQuantity(house.ProductId, int(house.Quantity))
+	if err := p.IncreaseProductQuantity(house.ProductId, house.Quantity); err != nil {
+		tx.Rollback()
+		return 0, err
+	}
+	tx.Commit()
 
 	return house.ID, nil
 
@@ -50,27 +57,29 @@ func (p *SellerPostgres) UpdateQuantity(productId uint, quantity int) error {
 	return nil
 }
 
-func (p *SellerPostgres) CreateProduct(sellerId uint, product models.Product) (uint, error) { // product id, error
-	product.CreatedAt = time.Now()
-	product.UpdatedAt = time.Now()
-	if err := p.db.Select("title", "description", "photo", "created_at", "updated_at", "quantity").Create(&product).Error; err != nil {
-		return 0, err
-	}
-	return product.ID, nil
-}
 func (p *SellerPostgres) GetAllSellerProduct(sellerId uint) ([]models.WareHouse, error) {
 	return nil, nil
 }
 
-func (p *SellerPostgres) GetById(sellerId uint, productId uint) (models.WareHouse, error) {
-	return models.WareHouse{}, nil
+func (p *SellerPostgres) GetById(sellerId uint, productId uint) (models.Product, error) {
+	return models.Product{}, nil
 }
 func (p *SellerPostgres) SearchByName(keyword string) ([]models.Product, error) {
 	return nil, nil
 }
-func (p *SellerPostgres) FilterByPrice(minPrice, maxPrice int) ([]models.WareHouse, error) {
-	return nil, nil
-}
-func (p *SellerPostgres) FilterByRating(minRate, maxRate int) ([]models.WareHouse, error) {
-	return nil, nil
+
+func (p *SellerPostgres) IncreaseProductQuantity(productId, quantity uint) error {
+	var product models.Product
+	if err := p.db.First(&product, productId).Error; err != nil {
+		return err
+	}
+	product.Quantity += quantity
+
+	err := p.db.Save(&product).Error
+	if err != nil {
+		return err
+	}
+
+	return nil
+
 }
