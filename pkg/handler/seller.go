@@ -33,9 +33,8 @@ func (h *Handler) AddProduct(ctx *gin.Context) {
 		newErrorResponse(ctx, http.StatusBadRequest, err.Error())
 		return
 	}
-	input.UserID = sellerId
 
-	productId, err := h.service.Seller.AddProduct(input)
+	productId, err := h.service.Seller.AddProduct(sellerId, input)
 	if err != nil {
 		newErrorResponse(ctx, http.StatusInternalServerError, err.Error())
 		return

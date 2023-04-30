@@ -17,8 +17,8 @@ func (s *SellerService) UpdateProduct(sellerId, productId uint, update models.Up
 	return s.repository.UpdateProduct(sellerId, productId, update)
 }
 
-func (s *SellerService) AddProduct(product models.WareHouse) (uint, error) {
-	return s.repository.AddProduct(product)
+func (s *SellerService) AddProduct(sellerId uint, product models.WareHouse) (uint, error) {
+	return s.repository.AddProduct(sellerId, product)
 }
 
 func (s *SellerService) GetAllSellerProduct(userId uint) ([]models.WareHouse, error) {

@@ -33,7 +33,9 @@ func (p *SellerPostgres) GetAll() ([]models.WareHouse, error) {
 	return products, nil
 }
 
-func (p *SellerPostgres) AddProduct(house models.WareHouse) (uint, error) { // product id, error
+func (p *SellerPostgres) AddProduct(sellerId uint, house models.WareHouse) (uint, error) { // product id, error
+	house.UserID = sellerId
+
 	if err := p.db.Select("product_id", "user_id", "quantity", "price").Create(&house).Error; err != nil {
 		return 0, err
 	}
