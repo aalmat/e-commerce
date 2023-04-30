@@ -12,9 +12,9 @@ type Authorization interface {
 
 type Seller interface {
 	AddProduct(product models.WareHouse) (uint, error) // product id, error
-	GetAllSellerProduct(userId uint) ([]models.WareHouse, error)
-	DeleteProduct(productId uint) error
-	UpdateProduct(productId uint, update models.UpdateWareHouse) error
+	GetAllSellerProduct(sellerId uint) ([]models.WareHouse, error)
+	DeleteProduct(sellerId, productId uint) error
+	UpdateProduct(sellerId, productId uint, update models.UpdateWareHouse) error
 }
 
 type Product interface {

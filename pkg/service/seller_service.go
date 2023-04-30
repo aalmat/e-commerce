@@ -9,14 +9,12 @@ type SellerService struct {
 	repository repository.Seller
 }
 
-func (s *SellerService) DeleteProduct(productId uint) error {
-	//TODO implement me
-	panic("implement me")
+func (s *SellerService) DeleteProduct(sellerId, productId uint) error {
+	return s.repository.DeleteProduct(sellerId, productId)
 }
 
-func (s *SellerService) UpdateProduct(productId uint, update models.UpdateWareHouse) error {
-	//TODO implement me
-	panic("implement me")
+func (s *SellerService) UpdateProduct(sellerId, productId uint, update models.UpdateWareHouse) error {
+	return s.repository.UpdateProduct(sellerId, productId, update)
 }
 
 func (s *SellerService) AddProduct(product models.WareHouse) (uint, error) {

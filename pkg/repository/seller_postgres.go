@@ -10,12 +10,12 @@ type SellerPostgres struct {
 	db *gorm.DB
 }
 
-func (p *SellerPostgres) DeleteProduct(productId uint) error {
+func (p *SellerPostgres) DeleteProduct(sellerId, productId uint) error {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (p *SellerPostgres) UpdateProduct(productId uint, update models.UpdateWareHouse) error {
+func (p *SellerPostgres) UpdateProduct(sellerId, productId uint, update models.UpdateWareHouse) error {
 	//TODO implement me
 	panic("implement me")
 }
@@ -48,7 +48,7 @@ func (p *SellerPostgres) UpdateQuantity(productId uint, quantity int) error {
 	return nil
 }
 
-func (p *SellerPostgres) CreateProduct(product models.Product) (uint, error) { // product id, error
+func (p *SellerPostgres) CreateProduct(sellerId uint, product models.Product) (uint, error) { // product id, error
 	product.CreatedAt = time.Now()
 	product.UpdatedAt = time.Now()
 	if err := p.db.Select("title", "description", "photo", "created_at", "updated_at", "quantity").Create(&product).Error; err != nil {
@@ -56,10 +56,11 @@ func (p *SellerPostgres) CreateProduct(product models.Product) (uint, error) { /
 	}
 	return product.ID, nil
 }
-func (p *SellerPostgres) GetAllSellerProduct(userId uint) ([]models.WareHouse, error) {
+func (p *SellerPostgres) GetAllSellerProduct(sellerId uint) ([]models.WareHouse, error) {
 	return nil, nil
 }
-func (p *SellerPostgres) GetById(userId uint, productId uint) (models.WareHouse, error) {
+
+func (p *SellerPostgres) GetById(sellerId uint, productId uint) (models.WareHouse, error) {
 	return models.WareHouse{}, nil
 }
 func (p *SellerPostgres) SearchByName(keyword string) ([]models.Product, error) {
