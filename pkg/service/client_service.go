@@ -13,8 +13,8 @@ func (c *ClientService) PurchaseAll(userId uint) error {
 	return c.repository.PurchaseAll(userId)
 }
 
-func (c *ClientService) PurchaseById(userId uint, productIds []uint) error {
-	return c.repository.PurchaseById(userId, productIds)
+func (c *ClientService) PurchaseById(userId uint, productId uint) error {
+	return c.repository.PurchaseById(userId, productId)
 }
 
 func (c *ClientService) RateProduct(userId, productId uint, rate uint) (uint, error) {

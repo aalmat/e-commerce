@@ -30,7 +30,7 @@ type Client interface {
 	ShowCartProducts(userid uint) ([]models.WareHouse, error)
 	DeleteFromCart(userid uint, productId uint) error
 	PurchaseAll(userId uint) error
-	PurchaseById(userId uint, productIds []uint) error
+	PurchaseById(userId uint, productId uint) error
 	ChangeProductQuantity(userid uint, productId uint, quantity uint) (uint, error)
 	WriteComment(userId, productId uint, commentText string) (uint, error)
 	RateProduct(userId, productId uint, rate uint) (uint, error)
@@ -40,6 +40,8 @@ type Admin interface {
 	DeleteProduct(productId uint) error
 	CreateProduct(product models.Product) (uint, error)
 	UpdateProduct(productId uint, update models.ProductUpdate) error
+	GetAllOrders() ([]models.Order, error)
+	SaveOrder(order models.Order) error
 }
 
 type Service struct {

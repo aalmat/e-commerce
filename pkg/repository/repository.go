@@ -3,6 +3,7 @@ package repository
 import (
 	"github.com/aalmat/e-commerce/models"
 	"github.com/jinzhu/gorm"
+	"time"
 )
 
 type Authorization interface {
@@ -27,7 +28,7 @@ type Product interface {
 type Client interface {
 	AddToCart(userId uint, whId uint, quantity uint) (uint, error)
 	PurchaseAll(userId uint) error
-	PurchaseById(userId uint, productIds []uint) error
+	PurchaseById(userId uint, productId uint) error
 	ShowCartProducts(userId uint) ([]models.WareHouse, error)
 	DeleteFromCart(userid uint, productId uint) error
 	ChangeProductQuantity(userid uint, productId uint, quantity uint) (uint, error)
@@ -40,6 +41,9 @@ type Admin interface {
 	DeleteProduct(productId uint) error
 	GetProducts() ([]models.Product, error)
 	UpdateProduct(productId uint, update models.ProductUpdate) error
+	GetAllOrders() ([]models.Order, error)
+	SaveOrder(order models.Order) error
+	CheckOrders(tickInterval time.Duration)
 }
 
 type Repository struct {

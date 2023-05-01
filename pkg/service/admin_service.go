@@ -9,6 +9,10 @@ type AdminService struct {
 	repository repository.Admin
 }
 
+func (a *AdminService) SaveOrder(order models.Order) error {
+	return a.repository.SaveOrder(order)
+}
+
 func (a *AdminService) UpdateProduct(productId uint, update models.ProductUpdate) error {
 	return a.repository.UpdateProduct(productId, update)
 }
@@ -23,4 +27,8 @@ func (a *AdminService) CreateProduct(product models.Product) (uint, error) {
 
 func NewAdminService(repo repository.Admin) *AdminService {
 	return &AdminService{repo}
+}
+
+func (a *AdminService) GetAllOrders() ([]models.Order, error) {
+	return a.repository.GetAllOrders()
 }

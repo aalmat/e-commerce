@@ -13,7 +13,10 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 )
+
+const tickInterval = time.Minute
 
 func main() {
 
@@ -50,6 +53,8 @@ func main() {
 			logrus.Fatalf("server error: %s", err.Error())
 		}
 	}()
+
+	go repos.Admin.CheckOrders(tickInterval)
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGTERM, syscall.SIGINT)

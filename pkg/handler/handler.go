@@ -41,7 +41,8 @@ func (h *Handler) Routes() *gin.Engine {
 		client.PUT("/:id", h.ChangeProductQuantity)
 		client.POST("/:id/comment", h.WriteComment)
 		client.POST("/:id/rate", h.RateProduct)
-		client.POST("/", h.PurchaseAll)
+		client.POST("/purchase", h.PurchaseAll)
+		client.POST(":id/purchase", h.PurchaseById)
 	}
 
 	admin := ecommerce.Group("/admin", h.UserIdentify)

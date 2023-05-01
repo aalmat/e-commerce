@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/aalmat/e-commerce/models"
 	"github.com/jinzhu/gorm"
+	"github.com/sirupsen/logrus"
 	"time"
 )
 
@@ -115,4 +116,46 @@ func (a *AdminPostgres) DeleteProductFromOrder(productId uint) error {
 		return nil
 	}
 	return err
+}
+
+func (a *AdminPostgres) GetAllOrders() ([]models.Order, error) {
+	var order []models.Order
+	if err := a.db.Find(&order).Error; err != nil {
+		return nil, err
+	}
+
+	return order, nil
+
+}
+
+func (a *AdminPostgres) SaveOrder(order models.Order) error {
+	err := a.db.Save(&order).Error
+	return err
+}
+
+func (a *AdminPostgres) CheckOrders(tickInterval time.Duration) {
+	ticker := time.NewTicker(tickInterval)
+	defer ticker.Stop()
+
+	for {
+		orders, err := a.GetAllOrders()
+		if err != nil {
+			logrus.Println("Error getting orders:", err)
+			continue
+		}
+		select {
+		case <-ticker.C:
+			for _, order := range orders {
+				if order.Status != true && time.Now().After(order.DeliveryDate) {
+					order.Status = true
+					a.SaveOrder(order)
+					if err != nil {
+						logrus.Println("Error updating order:", err)
+						continue
+					}
+					logrus.Println("Order successfully delivered")
+				}
+			}
+		}
+	}
 }

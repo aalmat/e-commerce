@@ -14,6 +14,10 @@ type ClientPostgres struct {
 	db *gorm.DB
 }
 
+const (
+	deliveryInterval = 5
+)
+
 func (c *ClientPostgres) PurchaseAll(userId uint) error {
 	tx := c.db.Begin()
 
@@ -25,23 +29,7 @@ func (c *ClientPostgres) PurchaseAll(userId uint) error {
 	fmt.Println("whs ", whs)
 
 	for i := range whs {
-		Order := c.CartToOrder(whs[i])
-
-		if err := tx.Select("user_id", "product_id", "quantity", "delivery_date", "status", "created_at", "updated_at").Create(&Order).Error; err != nil {
-			tx.Rollback()
-			return errors.New(fmt.Sprintf("error adding product with is %d %s", Order.ID, err.Error()))
-		}
-
-		if err := c.ChangeWhQuantity(whs[i].ProductID, whs[i].Quantity); err != nil {
-			tx.Rollback()
-			return err
-		}
-		if err := c.ChangePrQuantity(whs[i].ProductID, whs[i].Quantity); err != nil {
-			tx.Rollback()
-			return err
-		}
-
-		if err := c.DeleteFromCart(userId, whs[i].ProductID); err != nil {
+		if err := c.PurchaseById(userId, whs[i].ProductID); err != nil {
 			tx.Rollback()
 			return err
 		}
@@ -55,36 +43,35 @@ func (c *ClientPostgres) PurchaseAll(userId uint) error {
 	return nil
 }
 
-func (c *ClientPostgres) PurchaseById(userId uint, productIds []uint) error {
+func (c *ClientPostgres) PurchaseById(userId uint, productId uint) error {
 	tx := c.db.Begin()
 
-	for i := range productIds {
-		var wh models.Cart
-		if err := tx.Where("user_id=? and product_id=?", userId, productIds[i]).First(&wh).Error; err != nil {
-			return errors.New(fmt.Sprintf("error selecting cart with id %d", wh.ID))
-		}
-
-		Order := c.CartToOrder(wh)
-
-		if err := tx.Select("user_id", "product_id", "quantity", "delivery_date", "status", "created_at", "updated_at").Create(Order).Error; err != nil {
-			tx.Rollback()
-			return errors.New(fmt.Sprintf("error adding product with is %d", Order.ID))
-		}
-
-		if err := c.ChangeWhQuantity(productIds[i], wh.Quantity); err != nil {
-			tx.Rollback()
-			return err
-		}
-		if err := c.ChangePrQuantity(productIds[i], wh.Quantity); err != nil {
-			tx.Rollback()
-			return err
-		}
-
-		if err := c.DeleteFromCart(userId, productIds[i]); err != nil {
-			tx.Rollback()
-			return err
-		}
+	var wh models.Cart
+	if err := tx.Where("user_id=? and product_id=?", userId, productId).First(&wh).Error; err != nil {
+		return errors.New(fmt.Sprintf("error selecting cart with id %d", wh.ID))
 	}
+
+	Order := c.CartToOrder(wh)
+
+	if err := tx.Select("user_id", "product_id", "quantity", "delivery_date", "status", "created_at", "updated_at").Create(&Order).Error; err != nil {
+		tx.Rollback()
+		return errors.New(fmt.Sprintf("error adding product with is %d", Order.ID))
+	}
+
+	if err := c.ChangeWhQuantity(productId, wh.Quantity); err != nil {
+		tx.Rollback()
+		return err
+	}
+	if err := c.ChangePrQuantity(productId, wh.Quantity); err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	if err := c.DeleteFromCart(userId, productId); err != nil {
+		tx.Rollback()
+		return err
+	}
+
 	if err := tx.Commit().Error; err != nil {
 		tx.Rollback()
 		return err
@@ -100,6 +87,10 @@ func (c *ClientPostgres) ChangeWhQuantity(productId, subs uint) error {
 		return err
 	}
 
+	if wh.Quantity < subs {
+		return errors.New("products in warehouse is less than you want")
+	}
+
 	wh.Quantity = wh.Quantity - subs
 	if err := c.db.Save(&wh).Error; err != nil {
 		return err
@@ -110,6 +101,10 @@ func (c *ClientPostgres) ChangePrQuantity(productId, subs uint) error {
 	var wh models.Product
 	if err := c.db.Where("id=?", productId).First(&wh).Error; err != nil {
 		return err
+	}
+
+	if wh.Quantity < subs {
+		return errors.New("products quantity is less than you want")
 	}
 
 	wh.Quantity = wh.Quantity - subs
@@ -124,7 +119,7 @@ func (c *ClientPostgres) CartToOrder(wh models.Cart) models.Order {
 
 	hours := time.Now().Sub(wh.CreatedAt).Hours()
 	days := int(hours / 24)
-	days = days % 5
+	days = days % deliveryInterval
 	h := time.Duration(days * 24)
 
 	Order.DeliveryDate = time.Now().Add(time.Hour * h)

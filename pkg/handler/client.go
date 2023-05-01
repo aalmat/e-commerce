@@ -285,3 +285,40 @@ func (h *Handler) PurchaseAll(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, "purchase")
 }
+
+func (h *Handler) PurchaseById(ctx *gin.Context) {
+	userId, err := h.GetUserId(ctx)
+	//fmt.Println(sellerId)
+	if err != nil {
+		logrus.Println(err.Error())
+		return
+	}
+	role, err := h.GetUserRole(ctx)
+	if err != nil {
+		logrus.Println(err.Error())
+		return
+	}
+
+	if role != models.Client {
+		newErrorResponse(ctx, http.StatusUnauthorized, "you are not client")
+		return
+	}
+
+	id := ctx.Param("id")
+	uid, err := strconv.ParseUint(id, 10, 64)
+	if err != nil {
+		newErrorResponse(ctx, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	err = h.service.Client.PurchaseById(userId, uint(uid))
+	if err != nil {
+		newErrorResponse(ctx, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	ctx.JSON(http.StatusOK, map[string]interface{}{
+		"id": id,
+	})
+
+}
