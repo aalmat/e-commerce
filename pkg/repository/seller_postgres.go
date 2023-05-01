@@ -11,8 +11,11 @@ type SellerPostgres struct {
 }
 
 func (p *SellerPostgres) DeleteProduct(sellerId, productId uint) error {
-	//TODO implement me
-	panic("implement me")
+	if err := p.db.Where("id = ? AND seller_id = ?", productId, sellerId).Delete(&models.Product{}).Error; err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (p *SellerPostgres) UpdateProduct(sellerId, productId uint, update models.UpdateWareHouse) error {
@@ -34,16 +37,17 @@ func (p *SellerPostgres) GetAll() ([]models.WareHouse, error) {
 }
 
 func (p *SellerPostgres) AddProduct(sellerId uint, house models.WareHouse) (uint, error) { // product id, error
+	tx := p.db.Begin()
 	house.UserID = sellerId
-
-	if err := p.db.Select("product_id", "user_id", "quantity", "price").Create(&house).Error; err != nil {
+	if err := tx.Select("product_id", "user_id", "quantity", "price").Create(&house).Error; err != nil {
+		tx.Rollback()
 		return 0, err
 	}
-
-	p.UpdateQuantity(house.ProductId, int(house.Quantity))
-
+	if err := p.UpdateQuantity(house.ProductId, int(house.Quantity)); err != nil {
+		tx.Rollback()
+		return 0, err
+	}
 	return house.ID, nil
-
 }
 
 func (p *SellerPostgres) UpdateQuantity(productId uint, quantity int) error {
