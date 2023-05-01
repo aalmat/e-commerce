@@ -21,23 +21,24 @@ type Seller interface {
 
 type Product interface {
 	GetAll() ([]models.Product, error)
-	GetById(userId uint, productId uint) (models.Product, error)
+	GetById(productId uint) (models.Product, error)
+	SearchByName(search models.Search) ([]models.Product, error)
 }
 
 type Client interface {
-	AddToCart(userId uint, productId uint, quantity uint) (uint, error)
+	AddToCart(userId uint, whId uint, quantity uint) (uint, error)
 	ShowCartProducts(userid uint) ([]models.WareHouse, error)
 	DeleteFromCart(userid uint, productId uint) error
+	PurchaseAll(userId uint) error
+	PurchaseById(userId uint, productIds []uint) error
 	ChangeProductQuantity(userid uint, productId uint, quantity uint) (uint, error)
 	WriteComment(userId, productId uint, commentText string) (uint, error)
 	RateProduct(userId, productId uint, rate uint) (uint, error)
-	SearchByName(keyword string) ([]models.Product, error)
 }
 
 type Admin interface {
 	DeleteProduct(productId uint) error
 	CreateProduct(product models.Product) (uint, error)
-	GetProducts() ([]models.Product, error)
 	UpdateProduct(productId uint, update models.ProductUpdate) error
 }
 

@@ -36,27 +36,6 @@ func (h *Handler) CreateProduct(ctx *gin.Context) {
 
 }
 
-func (h *Handler) GetProducts(ctx *gin.Context) {
-	userRole, err := h.GetUserRole(ctx)
-	if err != nil {
-		newErrorResponse(ctx, http.StatusUnauthorized, err.Error())
-		return
-	}
-	if userRole != models.Admin {
-		newErrorResponse(ctx, http.StatusUnauthorized, "you are not admin")
-		return
-	}
-
-	products, err := h.service.Admin.GetProducts()
-	if err != nil {
-		newErrorResponse(ctx, http.StatusInternalServerError, err.Error())
-	}
-
-	ctx.JSON(http.StatusOK, models.GetAllListsResponse{
-		products,
-	})
-}
-
 func (h *Handler) UpdateProduct(ctx *gin.Context) {
 	userRole, err := h.GetUserRole(ctx)
 	if err != nil {

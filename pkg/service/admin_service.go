@@ -21,10 +21,6 @@ func (a *AdminService) CreateProduct(product models.Product) (uint, error) {
 	return a.repository.CreateProduct(product)
 }
 
-func (a *AdminService) GetProducts() ([]models.Product, error) {
-	return a.repository.GetProducts()
-}
-
 func NewAdminService(repo repository.Admin) *AdminService {
 	return &AdminService{repo}
 }

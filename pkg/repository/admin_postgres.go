@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"fmt"
 	"github.com/aalmat/e-commerce/models"
 	"github.com/jinzhu/gorm"
 	"time"
@@ -59,10 +60,59 @@ func (a *AdminPostgres) CreateProduct(product models.Product) (uint, error) {
 }
 
 func (a *AdminPostgres) DeleteProduct(productId uint) error {
-	err := a.db.Where("id = ?", productId).Delete(models.Product{}).Error
-	return err
+	if err := a.DeleteProductFromCart(productId); !gorm.IsRecordNotFoundError(err) && err != nil {
+		return err
+	}
+	if err := a.DeleteProductFromOrder(productId); !gorm.IsRecordNotFoundError(err) && err != nil {
+		return err
+	}
+	if err := a.DeleteProductFromWare(productId); !gorm.IsRecordNotFoundError(err) && err != nil {
+		return err
+	}
+	if err := a.db.Where("id = ?", productId).Delete(&models.Product{}).Error; err != nil {
+		return err
+	}
+	return nil
 }
 
 func NewAdminPostgres(db *gorm.DB) *AdminPostgres {
 	return &AdminPostgres{db}
+}
+
+func (a *AdminPostgres) DeleteProductFromWare(productId uint) error {
+	var wh models.WareHouse
+	if err := a.db.Find(&wh, productId).Error; !gorm.IsRecordNotFoundError(err) && err != nil {
+		return err
+	}
+	fmt.Println(wh)
+	err := a.db.Delete(&wh).Error
+	if !gorm.IsRecordNotFoundError(err) {
+		return nil
+	}
+	return err
+}
+
+func (a *AdminPostgres) DeleteProductFromCart(productId uint) error {
+	var wh models.Cart
+	if err := a.db.Find(&wh, productId).Error; !gorm.IsRecordNotFoundError(err) && err != nil {
+		return err
+	}
+
+	err := a.db.Delete(&wh).Error
+	if !gorm.IsRecordNotFoundError(err) {
+		return nil
+	}
+	return err
+}
+
+func (a *AdminPostgres) DeleteProductFromOrder(productId uint) error {
+	var wh models.Order
+	if err := a.db.Find(&wh, productId).Error; !gorm.IsRecordNotFoundError(err) && err != nil {
+		return err
+	}
+	err := a.db.Delete(&wh).Error
+	if !gorm.IsRecordNotFoundError(err) {
+		return nil
+	}
+	return err
 }

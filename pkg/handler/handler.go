@@ -41,6 +41,7 @@ func (h *Handler) Routes() *gin.Engine {
 		client.PUT("/:id", h.ChangeProductQuantity)
 		client.POST("/:id/comment", h.WriteComment)
 		client.POST("/:id/rate", h.RateProduct)
+		client.POST("/", h.PurchaseAll)
 	}
 
 	admin := ecommerce.Group("/admin", h.UserIdentify)
@@ -49,6 +50,14 @@ func (h *Handler) Routes() *gin.Engine {
 		admin.DELETE("/:id", h.DeleteProduct)
 		admin.PUT("/:id", h.UpdateProduct)
 		admin.GET("/", h.GetProducts)
+
+	}
+
+	product := ecommerce.Group("/product")
+	{
+		product.GET("/search", h.SearchByName)
+		product.GET("/product", h.GetProducts)
+		product.GET("/product/:id", h.GetProductById)
 	}
 
 	return router

@@ -44,13 +44,13 @@ func (h *Handler) AddToCart(ctx *gin.Context) {
 		return
 	}
 
-	var quantity uint
+	var quantity models.ProductQuantity
 	if err := ctx.BindJSON(&quantity); err != nil {
 		newErrorResponse(ctx, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	cartId, err := h.service.Client.AddToCart(userId, uint(uid), quantity)
+	cartId, err := h.service.Client.AddToCart(userId, uint(uid), quantity.Quantity)
 	if err != nil {
 		newErrorResponse(ctx, http.StatusBadRequest, err.Error())
 		return
@@ -257,4 +257,31 @@ func (h *Handler) RateProduct(ctx *gin.Context) {
 		"id": rateId,
 	})
 
+}
+
+func (h *Handler) PurchaseAll(ctx *gin.Context) {
+	userId, err := h.GetUserId(ctx)
+	//fmt.Println(sellerId)
+	if err != nil {
+		logrus.Println(err.Error())
+		return
+	}
+	role, err := h.GetUserRole(ctx)
+	if err != nil {
+		logrus.Println(err.Error())
+		return
+	}
+
+	if role != models.Client {
+		newErrorResponse(ctx, http.StatusUnauthorized, "you are not client")
+		return
+	}
+
+	err = h.service.Client.PurchaseAll(userId)
+	if err != nil {
+		newErrorResponse(ctx, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	ctx.JSON(http.StatusOK, "purchase")
 }

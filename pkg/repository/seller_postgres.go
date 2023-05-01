@@ -58,14 +58,12 @@ func (p *SellerPostgres) UpdateQuantity(productId uint, quantity int) error {
 }
 
 func (p *SellerPostgres) GetAllSellerProduct(sellerId uint) ([]models.WareHouse, error) {
-	return nil, nil
-}
+	var whs []models.WareHouse
+	if err := p.db.Where("user_id = ?", sellerId).Find(&whs).Error; err != nil {
+		return nil, err
+	}
 
-func (p *SellerPostgres) GetById(sellerId uint, productId uint) (models.Product, error) {
-	return models.Product{}, nil
-}
-func (p *SellerPostgres) SearchByName(keyword string) ([]models.Product, error) {
-	return nil, nil
+	return whs, nil
 }
 
 func (p *SellerPostgres) IncreaseProductQuantity(productId, quantity uint) error {

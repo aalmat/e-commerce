@@ -8,3 +8,7 @@ type Cart struct {
 	ProductID uint `json:"product_id" binding:"required" gorm:"ForeignKey:Product.ID"`
 	Quantity  uint `json:"quantity" binding:"required"`
 }
+
+type ProductQuantity struct {
+	Quantity uint `json:"quantity"`
+}

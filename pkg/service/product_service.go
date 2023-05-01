@@ -16,6 +16,10 @@ func NewProductService(r repository.Product) *ProductService {
 func (p ProductService) GetAll() ([]models.Product, error) {
 	return p.repository.GetAll()
 }
-func (p *ProductService) GetById(userId uint, productId uint) (models.Product, error) {
-	return p.repository.GetById(userId, productId)
+func (p *ProductService) GetById(productId uint) (models.Product, error) {
+	return p.repository.GetById(productId)
+}
+
+func (p *ProductService) SearchByName(search models.Search) ([]models.Product, error) {
+	return p.repository.SearchByName(search)
 }
