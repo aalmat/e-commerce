@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"fmt"
 	"github.com/aalmat/e-commerce/models"
 	"github.com/jinzhu/gorm"
 	"strings"
@@ -8,6 +9,16 @@ import (
 
 type ProductPostgres struct {
 	db *gorm.DB
+}
+
+func (p *ProductPostgres) ViewComment(productId uint) ([]models.CommentUser, error) {
+	var result []models.CommentUser
+
+	if err := p.db.Table("users").Select("users.email, commentaries.text, commentaries.created_at").Joins("inner join commentaries on commentaries.user_id = users.id").Where("commentaries.product_id = ?", productId).Order("commentaries.created_at").Scan(&result).Error; err != nil {
+		return nil, err
+	}
+
+	return result, nil
 }
 
 func (p *ProductPostgres) GetAll() ([]models.Product, error) {
@@ -27,6 +38,7 @@ func (p *ProductPostgres) GetById(productId uint) (models.Product, error) {
 }
 
 func (p *ProductPostgres) SearchByName(search models.Search) ([]models.Product, error) {
+
 	words := strings.Split(search.Keyword, " ")
 	query := ""
 	for _, v := range words {
@@ -38,6 +50,7 @@ func (p *ProductPostgres) SearchByName(search models.Search) ([]models.Product, 
 		query += "%"
 	}
 
+	fmt.Println(search)
 	var products []models.Product
 	if err := p.db.Where("title like ?", query).Find(&products).Error; err != nil {
 		return nil, err

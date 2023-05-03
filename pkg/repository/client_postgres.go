@@ -8,8 +8,6 @@ import (
 	"time"
 )
 
-var defaultDeliveryDate time.Time
-
 type ClientPostgres struct {
 	db *gorm.DB
 }
@@ -43,11 +41,11 @@ func (c *ClientPostgres) PurchaseAll(userId uint) error {
 	return nil
 }
 
-func (c *ClientPostgres) PurchaseById(userId uint, productId uint) error {
+func (c *ClientPostgres) PurchaseById(userId uint, whId uint) error {
 	tx := c.db.Begin()
 
 	var wh models.Cart
-	if err := tx.Where("user_id=? and product_id=?", userId, productId).First(&wh).Error; err != nil {
+	if err := tx.Where("user_id=? and product_id=?", userId, whId).First(&wh).Error; err != nil {
 		return errors.New(fmt.Sprintf("error selecting cart with id %d", wh.ID))
 	}
 
@@ -58,16 +56,16 @@ func (c *ClientPostgres) PurchaseById(userId uint, productId uint) error {
 		return errors.New(fmt.Sprintf("error adding product with is %d", Order.ID))
 	}
 
-	if err := c.ChangeWhQuantity(productId, wh.Quantity); err != nil {
+	if err := c.ChangeWhQuantity(whId, wh.Quantity); err != nil {
 		tx.Rollback()
 		return err
 	}
-	if err := c.ChangePrQuantity(productId, wh.Quantity); err != nil {
+	if err := c.ChangePrQuantity(whId, wh.Quantity); err != nil {
 		tx.Rollback()
 		return err
 	}
 
-	if err := c.DeleteFromCart(userId, productId); err != nil {
+	if err := c.DeleteFromCart(userId, whId); err != nil {
 		tx.Rollback()
 		return err
 	}
@@ -133,12 +131,87 @@ func (c *ClientPostgres) CartToOrder(wh models.Cart) models.Order {
 	return Order
 }
 
-func (c *ClientPostgres) RateProduct(userId, productId uint, rate uint) (uint, error) {
-	return 0, nil
+func (c *ClientPostgres) RateProduct(rate models.Rating) (uint, error) {
+	tx := c.db.Begin()
+
+	// Проверяем, существует ли запись рейтинга для данного пользователя и продукта
+	var existingRating models.Rating
+	if err := tx.Where("user_id = ? AND product_id = ?", rate.UserId, rate.ProductId).First(&existingRating).Error; err != nil {
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			tx.Rollback()
+			return 0, err
+		}
+	}
+
+	// Если запись рейтинга существует, обновляем ее, бомаса создаем новую запись
+	if existingRating.ID != 0 {
+		existingRating.Rate = rate.Rate
+		if err := tx.Save(&existingRating).Error; err != nil {
+			tx.Rollback()
+			return 0, err
+		}
+	} else {
+
+		if err := tx.Create(&rate).Error; err != nil {
+			tx.Rollback()
+			return 0, err
+		}
+	}
+
+	// Рассчитываем новый средний рейтинг товара и обновляем его
+	var product models.Product
+	if err := tx.First(&product, rate.ProductId).Error; err != nil {
+		tx.Rollback()
+		return 0, err
+	}
+
+	var totalRatings uint
+	var ratingsCount uint
+	if err := tx.Model(&models.Rating{}).Where("product_id = ?", rate.ProductId).Select("COUNT(product_id)").Row().Scan(&ratingsCount); err != nil {
+		tx.Rollback()
+		return 0, err
+	}
+	if ratingsCount > 0 {
+		if err := tx.Model(&models.Rating{}).Where("product_id = ?", rate.ProductId).Select("SUM(rate)").Row().Scan(&totalRatings); err != nil {
+			tx.Rollback()
+			return 0, err
+		}
+		product.Rating = totalRatings / ratingsCount
+	} else {
+		product.Rating = 0
+	}
+	if err := tx.Save(&product).Error; err != nil {
+		tx.Rollback()
+		return 0, err
+	}
+	if err := tx.Commit().Error; err != nil {
+		return 0, err
+	}
+	return product.Rating, nil
 }
 
-func (c *ClientPostgres) WriteComment(userId, productId uint, commentText string) (uint, error) {
-	return 0, nil
+func (c *ClientPostgres) WriteComment(comment models.Commentary) (uint, error) {
+	tx := c.db.Begin()
+
+	var product models.Product
+	if err := tx.First(&product, comment.ProductId).Error; err != nil {
+		tx.Rollback()
+		return 0, err
+	}
+
+	comment.CreatedAt = time.Now()
+	comment.UpdatedAt = time.Now()
+
+	if err := tx.Select("user_id", "product_id", "text", "created_at", "updated_at").Create(&comment).Error; err != nil {
+		tx.Rollback()
+		return 0, err
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		return 0, err
+	}
+
+	return comment.ID, nil
 }
 
 func (c *ClientPostgres) ChangeProductQuantity(userid uint, productId uint, quantity uint) (uint, error) {
@@ -196,29 +269,26 @@ func (c *ClientPostgres) AddToCart(userId uint, whId uint, quantity uint) (uint,
 		}
 		return item.ID, nil
 	} else {
-		id, err1 := c.ChangeProductQuantity(item.UserID, item.ProductID, item.Quantity)
-		if err1 != nil {
-			tx.Rollback()
-			return 0, err1
-		}
-		if err := tx.Commit().Error; err != nil {
-			tx.Rollback()
-			return 0, err
-		}
-		return id, nil
+		return 0, errors.New("you already added this product to cart")
 	}
 
 }
 
-func (c *ClientPostgres) ShowCartProducts(userId uint) ([]models.WareHouse, error) {
-	//TODO implement me
-	panic("implement me")
+func (c *ClientPostgres) ShowCartProducts(userId uint) ([]models.CartInfo, error) {
+	var whs []models.CartInfo
+
+	if err := c.db.Table("ware_houses").Select("distinct on (product_id) ware_houses.product_id, ware_houses.user_id, ware_houses.price, ware_houses.created_at, ware_houses.id, carts.quantity").Joins("inner join carts on ware_houses.product_id = carts.product_id").Where("carts.user_id=? and carts.deleted_at is null", userId).Scan(&whs).Error; err != nil {
+		return nil, err
+	}
+
+	return whs, nil
 }
 
 func (c *ClientPostgres) DeleteFromCart(userId, productId uint) error {
 	tx := c.db.Begin()
+	cart := models.Cart{UserID: userId, ProductID: productId}
 
-	if err := tx.Where("user_id = ? AND product_id = ?", userId, productId).Delete(&models.Cart{}).Error; err != nil {
+	if err := tx.Where("user_id = ? AND product_id = ?", cart.UserID, cart.ProductID).Delete(&cart).Error; err != nil {
 		tx.Rollback()
 		return err
 	}
@@ -229,4 +299,13 @@ func (c *ClientPostgres) DeleteFromCart(userId, productId uint) error {
 	}
 
 	return nil
+}
+
+func (c *ClientPostgres) ShowOrders(userId uint) ([]models.Order, error) {
+	var orders []models.Order
+	if err := c.db.Where("user_id = ?", userId).Order("created_at desc").Find(&orders).Error; err != nil {
+		return nil, err
+	}
+
+	return orders, nil
 }

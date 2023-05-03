@@ -12,10 +12,10 @@ type Authorization interface {
 }
 
 type Seller interface {
-	AddProduct(sellerId uint, product models.WareHouse) (uint, error) // product id, error
+	AddProduct(product models.WareHouse) (uint, error) // product id, error
 	GetAllSellerProduct(sellerId uint) ([]models.WareHouse, error)
 	DeleteProduct(sellerId, productId uint) error
-	UpdateProduct(sellerId, productId uint, update models.UpdateWareHouse) error
+	UpdateProduct(sellerId uint, update models.UpdateWareHouse) error
 	IncreaseProductQuantity(productId, quantity uint) error
 }
 
@@ -23,17 +23,19 @@ type Product interface {
 	GetAll() ([]models.Product, error)
 	GetById(productId uint) (models.Product, error)
 	SearchByName(search models.Search) ([]models.Product, error)
+	ViewComment(productId uint) ([]models.CommentUser, error)
 }
 
 type Client interface {
 	AddToCart(userId uint, whId uint, quantity uint) (uint, error)
 	PurchaseAll(userId uint) error
 	PurchaseById(userId uint, productId uint) error
-	ShowCartProducts(userId uint) ([]models.WareHouse, error)
+	ShowCartProducts(userId uint) ([]models.CartInfo, error)
 	DeleteFromCart(userid uint, productId uint) error
 	ChangeProductQuantity(userid uint, productId uint, quantity uint) (uint, error)
-	WriteComment(userId, productId uint, commentText string) (uint, error)
-	RateProduct(userId, productId uint, rate uint) (uint, error)
+	WriteComment(comment models.Commentary) (uint, error)
+	RateProduct(rate models.Rating) (uint, error)
+	ShowOrders(userId uint) ([]models.Order, error)
 }
 
 type Admin interface {

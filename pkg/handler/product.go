@@ -52,3 +52,22 @@ func (h *Handler) GetProductById(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, product)
 }
+
+func (h *Handler) ViewComment(ctx *gin.Context) {
+	id := ctx.Param("id")
+	uid, err := strconv.ParseUint(id, 10, 64)
+
+	if err != nil {
+		newErrorResponse(ctx, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	res, err := h.service.Product.ViewComment(uint(uid))
+	if err != nil {
+		newErrorResponse(ctx, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	ctx.JSON(http.StatusOK, res)
+
+}

@@ -1,6 +1,9 @@
 package models
 
-import "github.com/jinzhu/gorm"
+import (
+	"github.com/jinzhu/gorm"
+	"time"
+)
 
 type Cart struct {
 	gorm.Model
@@ -10,5 +13,13 @@ type Cart struct {
 }
 
 type ProductQuantity struct {
-	Quantity uint `json:"quantity"`
+	Quantity uint `json:"quantity" binding:"required"`
+}
+
+type CartInfo struct {
+	UserId    uint      `json:"seller_id"`
+	ProductId uint      `json:"product_id"`
+	Quantity  uint      `json:"quantity"`
+	Price     uint      `json:"price"`
+	CreatedAt time.Time `json:"created_at"`
 }

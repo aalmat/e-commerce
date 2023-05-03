@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"github.com/aalmat/e-commerce/models"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -45,3 +46,34 @@ func (h *Handler) signIn(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, map[string]interface{}{"token": token})
 
 }
+
+// store invalidated tokens in a map
+var blacklist map[string]bool
+
+// function to invalidate a token
+func invalidateToken(token string) error {
+	// check if token already exists in the blacklist
+	if blacklist[token] {
+		return fmt.Errorf("Token already invalidated")
+	}
+	// add token to blacklist
+	blacklist[token] = true
+	return nil
+}
+
+// handler for logout endpoint
+//func logoutHandler(ctx *gin.Context) {
+//	header := ctx.GetHeader(Authorization)
+//	if header == "" {
+//		newErrorResponse(ctx, http.StatusBadRequest, "header is empty")
+//	}
+//
+//	headers := strings.Split(header, " ")
+//	if len(headers) != 2 {
+//		newErrorResponse(ctx, http.StatusBadRequest, "wrong header format")
+//	}
+//
+//	token := headers[1]
+//
+//
+//}

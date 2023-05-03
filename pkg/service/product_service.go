@@ -9,11 +9,15 @@ type ProductService struct {
 	repository repository.Product
 }
 
+func (p *ProductService) ViewComment(productId uint) ([]models.CommentUser, error) {
+	return p.repository.ViewComment(productId)
+}
+
 func NewProductService(r repository.Product) *ProductService {
 	return &ProductService{r}
 }
 
-func (p ProductService) GetAll() ([]models.Product, error) {
+func (p *ProductService) GetAll() ([]models.Product, error) {
 	return p.repository.GetAll()
 }
 func (p *ProductService) GetById(productId uint) (models.Product, error) {

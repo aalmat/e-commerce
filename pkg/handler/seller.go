@@ -37,8 +37,9 @@ func (h *Handler) AddProduct(ctx *gin.Context) {
 		return
 	}
 	input.ProductId = uint(uid)
+	input.UserID = sellerId
 
-	productId, err := h.service.Seller.AddProduct(sellerId, input)
+	productId, err := h.service.Seller.AddProduct(input)
 	if err != nil {
 		newErrorResponse(ctx, http.StatusInternalServerError, err.Error())
 		return
@@ -101,7 +102,9 @@ func (h *Handler) UpdateWareHouse(ctx *gin.Context) {
 		newErrorResponse(ctx, http.StatusBadRequest, err.Error())
 		return
 	}
-	err = h.service.Seller.UpdateProduct(sellerId, uint(uid), input)
+
+	input.WhId = uint(uid)
+	err = h.service.Seller.UpdateProduct(sellerId, input)
 	if err != nil {
 		newErrorResponse(ctx, http.StatusBadRequest, err.Error())
 		return

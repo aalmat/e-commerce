@@ -3,16 +3,21 @@ package handler
 import (
 	"github.com/aalmat/e-commerce/pkg/service"
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 )
 
 const BasePage = "/market"
 
 type Handler struct {
-	service *service.Service
+	service  *service.Service
+	validate *validator.Validate
 }
 
 func NewHandler(service *service.Service) *Handler {
-	return &Handler{service: service}
+	return &Handler{
+		service:  service,
+		validate: validator.New(),
+	}
 }
 
 func (h *Handler) Routes() *gin.Engine {
@@ -35,7 +40,7 @@ func (h *Handler) Routes() *gin.Engine {
 
 	client := ecommerce.Group("/client", h.UserIdentify)
 	{
-		client.GET("")
+		client.GET("/", h.ShowCartProducts)
 		client.POST("/:id", h.AddToCart)
 		client.DELETE("/:id", h.DeleteFromCart)
 		client.PUT("/:id", h.ChangeProductQuantity)
@@ -43,6 +48,7 @@ func (h *Handler) Routes() *gin.Engine {
 		client.POST("/:id/rate", h.RateProduct)
 		client.POST("/purchase", h.PurchaseAll)
 		client.POST(":id/purchase", h.PurchaseById)
+		client.GET("/orders", h.ViewOrders)
 	}
 
 	admin := ecommerce.Group("/admin", h.UserIdentify)
@@ -57,8 +63,9 @@ func (h *Handler) Routes() *gin.Engine {
 	product := ecommerce.Group("/product")
 	{
 		product.GET("/search", h.SearchByName)
-		product.GET("/product", h.GetProducts)
-		product.GET("/product/:id", h.GetProductById)
+		product.GET("/", h.GetProducts)
+		product.GET("/:id", h.GetProductById)
+		product.GET("/:id/comments", h.ViewComment)
 	}
 
 	return router

@@ -20,6 +20,10 @@ type ProductUpdate struct {
 	Photo       string `json:"photo"`
 }
 
+type ProductRating struct {
+	Rating uint `json:"rating"`
+}
+
 func (p *ProductUpdate) Validate() error {
 	if p.Title == "" && p.Description == "" && p.Photo == "" {
 		return errors.New("Nothing to change")

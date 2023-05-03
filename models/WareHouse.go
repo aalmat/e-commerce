@@ -11,7 +11,7 @@ type WareHouse struct {
 }
 
 type UpdateWareHouse struct {
-	ProductId uint `json:"product_Id"`
-	Quantity  uint `json:"quantity"`
-	Price     uint `json:"price"`
+	WhId     uint `json:"ware_id"`
+	Quantity uint `json:"quantity"`
+	Price    uint `json:"price"`
 }

@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"errors"
 	"github.com/aalmat/e-commerce/models"
 	"github.com/jinzhu/gorm"
 	"time"
@@ -11,13 +12,51 @@ type SellerPostgres struct {
 }
 
 func (p *SellerPostgres) DeleteProduct(sellerId, productId uint) error {
-	//TODO implement me
-	panic("implement me")
+	tx := p.db.Begin()
+	var wh models.WareHouse
+	wh.ID = productId
+	wh.UserID = sellerId
+	if err := tx.Delete(&wh).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+	var cart models.Cart
+	cart.ProductID = productId
+	if err := tx.Delete(&cart).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	return nil
 }
 
-func (p *SellerPostgres) UpdateProduct(sellerId, productId uint, update models.UpdateWareHouse) error {
-	//TODO implement me
-	panic("implement me")
+func (p *SellerPostgres) UpdateProduct(sellerId uint, update models.UpdateWareHouse) error {
+	tx := p.db.Begin()
+
+	var wh models.WareHouse
+	if err := tx.Where("id = ? and user_id=?", update.WhId, sellerId).First(&wh).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	if update.Price != 0 {
+		wh.Price = update.Price
+	}
+	if update.Quantity != 0 {
+		wh.Quantity = update.Quantity
+	}
+
+	if err := tx.Save(&wh).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+	return nil
+
 }
 
 func NewSellerPostgres(db *gorm.DB) *SellerPostgres {
@@ -33,9 +72,14 @@ func (p *SellerPostgres) GetAll() ([]models.WareHouse, error) {
 	return products, nil
 }
 
-func (p *SellerPostgres) AddProduct(sellerId uint, house models.WareHouse) (uint, error) { // product id, error
+func (p *SellerPostgres) AddProduct(house models.WareHouse) (uint, error) { // product id, error
 	tx := p.db.Begin()
-	house.UserID = sellerId
+	var wh models.WareHouse
+	if err := tx.Where("product_id = ? and user_id=?", house.ProductId, house.UserID).Find(&wh).Error; !gorm.IsRecordNotFoundError(err) {
+		tx.Rollback()
+		return 0, errors.New("you already added warehouse")
+	}
+
 	house.CreatedAt = time.Now()
 	house.UpdatedAt = time.Now()
 	if err := tx.Select("product_id", "user_id", "quantity", "price", "created_at", "updated_at").Create(&house).Error; err != nil {
@@ -51,10 +95,6 @@ func (p *SellerPostgres) AddProduct(sellerId uint, house models.WareHouse) (uint
 
 	return house.ID, nil
 
-}
-
-func (p *SellerPostgres) UpdateQuantity(productId uint, quantity int) error {
-	return nil
 }
 
 func (p *SellerPostgres) GetAllSellerProduct(sellerId uint) ([]models.WareHouse, error) {

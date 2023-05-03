@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"errors"
 	"github.com/aalmat/e-commerce/models"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
@@ -87,7 +88,7 @@ func (h *Handler) ShowCartProducts(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, models.GetAllWareHousesResponse{wh})
+	ctx.JSON(http.StatusOK, wh)
 }
 
 func (h *Handler) DeleteFromCart(ctx *gin.Context) {
@@ -155,13 +156,13 @@ func (h *Handler) ChangeProductQuantity(ctx *gin.Context) {
 		return
 	}
 
-	var quantity uint
+	var quantity models.ProductQuantity
 	if err := ctx.BindJSON(&quantity); err != nil {
 		newErrorResponse(ctx, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	cartId, err := h.service.Client.ChangeProductQuantity(userId, uint(uid), quantity)
+	cartId, err := h.service.Client.ChangeProductQuantity(userId, uint(uid), quantity.Quantity)
 	if err != nil {
 		newErrorResponse(ctx, http.StatusInternalServerError, err.Error())
 		return
@@ -182,7 +183,7 @@ func (h *Handler) WriteComment(ctx *gin.Context) {
 	}
 	role, err := h.GetUserRole(ctx)
 	if err != nil {
-		logrus.Println(err.Error())
+		logrus.Println(errors.New("user role doesn't exists"))
 		return
 	}
 
@@ -200,15 +201,17 @@ func (h *Handler) WriteComment(ctx *gin.Context) {
 		return
 	}
 
-	var commentText string
-	if err := ctx.BindJSON(&commentText); err != nil {
+	var comment models.Commentary
+	if err := ctx.BindJSON(&comment); err != nil {
 		newErrorResponse(ctx, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	commentId, err := h.service.Client.WriteComment(userId, uint(productId), commentText)
-	if err := ctx.BindJSON(&commentText); err != nil {
-		newErrorResponse(ctx, http.StatusBadRequest, err.Error())
+	comment.ProductId = uint(productId)
+	comment.UserId = userId
+	commentId, err := h.service.Client.WriteComment(comment)
+	if err != nil {
+		newErrorResponse(ctx, http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -245,13 +248,15 @@ func (h *Handler) RateProduct(ctx *gin.Context) {
 		return
 	}
 
-	var rate uint
+	var rate models.Rating
 	if err := ctx.BindJSON(&rate); err != nil {
 		newErrorResponse(ctx, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	rateId, err := h.service.Client.RateProduct(userId, uint(productId), rate)
+	rate.ProductId = uint(productId)
+	rate.UserId = userId
+	rateId, err := h.service.Client.RateProduct(rate)
 
 	ctx.JSON(http.StatusOK, map[string]interface{}{
 		"id": rateId,
@@ -318,7 +323,34 @@ func (h *Handler) PurchaseById(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, map[string]interface{}{
-		"id": id,
+		"order id": id,
 	})
 
+}
+
+func (h *Handler) ViewOrders(ctx *gin.Context) {
+	userId, err := h.GetUserId(ctx)
+	//fmt.Println(sellerId)
+	if err != nil {
+		logrus.Println(err.Error())
+		return
+	}
+	role, err := h.GetUserRole(ctx)
+	if err != nil {
+		logrus.Println(err.Error())
+		return
+	}
+
+	if role != models.Client {
+		newErrorResponse(ctx, http.StatusUnauthorized, "you are not client")
+		return
+	}
+
+	orders, err := h.service.Client.ShowOrders(userId)
+	if err != nil {
+		newErrorResponse(ctx, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	ctx.JSON(http.StatusOK, orders)
 }

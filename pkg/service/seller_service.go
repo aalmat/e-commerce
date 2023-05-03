@@ -13,12 +13,12 @@ func (s *SellerService) DeleteProduct(sellerId, productId uint) error {
 	return s.repository.DeleteProduct(sellerId, productId)
 }
 
-func (s *SellerService) UpdateProduct(sellerId, productId uint, update models.UpdateWareHouse) error {
-	return s.repository.UpdateProduct(sellerId, productId, update)
+func (s *SellerService) UpdateProduct(sellerId uint, update models.UpdateWareHouse) error {
+	return s.repository.UpdateProduct(sellerId, update)
 }
 
-func (s *SellerService) AddProduct(sellerId uint, product models.WareHouse) (uint, error) {
-	return s.repository.AddProduct(sellerId, product)
+func (s *SellerService) AddProduct(product models.WareHouse) (uint, error) {
+	return s.repository.AddProduct(product)
 }
 
 func (s *SellerService) GetAllSellerProduct(userId uint) ([]models.WareHouse, error) {
