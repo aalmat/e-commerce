@@ -7,9 +7,9 @@ import (
 
 type Order struct {
 	gorm.Model
-	UserID       uint      `json:"user_id" binding:"required" gorm:"ForeignKey:User.ID"`
-	ProductID    uint      `json:"product_id" binding:"required" gorm:"ForeignKey:Product.ID"`
-	Quantity     uint      `json:"quantity" binding:"required"`
+	UserID       uint      `json:"user_id" validate:"required" gorm:"ForeignKey:User.ID"`
+	ProductID    uint      `json:"product_id" validate:"required" gorm:"ForeignKey:Product.ID"`
+	Quantity     uint      `json:"quantity" validate:"required"`
 	DeliveryDate time.Time `json:"delivery_date"`
 	Status       bool      `json:"status"`
 }

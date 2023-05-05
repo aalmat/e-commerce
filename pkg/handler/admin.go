@@ -24,6 +24,11 @@ func (h *Handler) CreateProduct(ctx *gin.Context) {
 		newErrorResponse(ctx, http.StatusBadRequest, err.Error())
 		return
 	}
+	if err := h.validate.Struct(input); err != nil {
+		newErrorResponse(ctx, http.StatusBadRequest, err.Error())
+		return
+	}
+
 	productId, err := h.service.Admin.CreateProduct(input)
 	if err != nil {
 		newErrorResponse(ctx, http.StatusInternalServerError, err.Error())
@@ -56,6 +61,11 @@ func (h *Handler) UpdateProduct(ctx *gin.Context) {
 	var input models.ProductUpdate
 	if err := ctx.BindJSON(&input); err != nil {
 		newErrorResponse(ctx, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	if err := h.validate.Struct(input); err != nil {
+		newErrorResponse(ctx, http.StatusBadRequest, err.Error())
 		return
 	}
 

@@ -2,6 +2,7 @@ package repository
 
 import (
 	"errors"
+	"fmt"
 	"github.com/aalmat/e-commerce/models"
 	"github.com/jinzhu/gorm"
 	"time"
@@ -13,16 +14,19 @@ type SellerPostgres struct {
 
 func (p *SellerPostgres) DeleteProduct(sellerId, productId uint) error {
 	tx := p.db.Begin()
-	var wh models.WareHouse
-	wh.ID = productId
-	wh.UserID = sellerId
-	if err := tx.Delete(&wh).Error; err != nil {
+	//var wh models.WareHouse
+	if err := tx.Where("id=? and user_id=?", productId, sellerId).Delete(&models.WareHouse{}).Error; err != nil {
+		fmt.Println(1)
 		tx.Rollback()
 		return err
 	}
-	var cart models.Cart
-	cart.ProductID = productId
-	if err := tx.Delete(&cart).Error; err != nil {
+	if err := tx.Where("product_id=?", productId).Delete(&models.Cart{}).Error; err != nil && !gorm.IsRecordNotFoundError(err) {
+		fmt.Println(2)
+		tx.Rollback()
+		return err
+	}
+
+	if err := tx.Commit().Error; err != nil {
 		tx.Rollback()
 		return err
 	}

@@ -14,21 +14,32 @@ const (
 	UserRole      = "userRole"
 )
 
-func (h *Handler) UserIdentify(ctx *gin.Context) {
-	header := ctx.GetHeader(Authorization)
+func ValidateHeader(header string) (string, error) {
 	if header == "" {
-		newErrorResponse(ctx, http.StatusBadRequest, "header is empty")
+		return "", errors.New("header is empty")
 	}
 
 	headers := strings.Split(header, " ")
 	if len(headers) != 2 {
-		newErrorResponse(ctx, http.StatusBadRequest, "wrong header format")
+		return "", errors.New("wrong header format")
 	}
 
-	token := headers[1]
+	return headers[1], nil
+}
+
+func (h *Handler) UserIdentify(ctx *gin.Context) {
+	header := ctx.GetHeader(Authorization)
+	token, err := ValidateHeader(header)
+
+	if err != nil {
+		newErrorResponse(ctx, http.StatusUnauthorized, err.Error())
+		return
+	}
+
 	id, role, err := h.service.Authorization.ParseToken(token)
 	if err != nil {
 		newErrorResponse(ctx, http.StatusInternalServerError, err.Error())
+		return
 	}
 	ctx.Set(UserId, id)
 	ctx.Set(UserRole, role)

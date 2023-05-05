@@ -4,12 +4,17 @@ import "gorm.io/gorm"
 
 type User struct {
 	gorm.Model
-	FirstName string `json:"first_name" binding:"required"`
-	LastName  string `json:"last_name" binding:"required"`
-	UserType  Role   `json:"user_type" binding:"required"`
-	Email     string `json:"email" binding:"required" gorm:"not null;unique"`
-	Phone     string `json:"phone" binding:"required" gorm:"not null;unique"`
-	Password  string `json:"password" binding:"required"`
+	FirstName string `json:"first_name" validate:"required,min=3,max=40"`
+	LastName  string `json:"last_name" validate:"required,min=3,max=40"`
+	UserType  Role   `json:"user_type" validate:"required"`
+	Email     string `json:"email" validate:"required,email" gorm:"not null;unique"`
+	Phone     string `json:"phone" validate:"required" gorm:"not null;unique"`
+	Password  string `json:"password" validate:"required,min=8"`
+}
+
+type SignUser struct {
+	Email    string `json:"email" validate:"required"`
+	Password string `json:"password" validate:"required"`
 }
 
 type Role int

@@ -8,8 +8,6 @@ import (
 	"time"
 )
 
-const maxSizeOfCart = 15
-
 type AuthPostgres struct {
 	db *gorm.DB
 }

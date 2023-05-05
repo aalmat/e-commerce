@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"flag"
+	"fmt"
 	e_commerce "github.com/aalmat/e-commerce"
 	"github.com/aalmat/e-commerce/models"
 	"github.com/aalmat/e-commerce/pkg/handler"
@@ -56,19 +58,25 @@ func main() {
 
 	go repos.Admin.CheckOrders(tickInterval)
 
+	// Graceful Shutdown
+	var wait time.Duration
+	flag.DurationVar(&wait, "graceful-timeout", time.Second*15, "the duration for which the server gracefully wait for existing connections to finish - e.g. 15s or 1m")
+	flag.Parse()
+
 	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, syscall.SIGTERM, syscall.SIGINT)
+
+	signal.Notify(quit, os.Interrupt, syscall.SIGINT) // CTRL+C
 	<-quit
+	fmt.Println("Gracefully shutting down...")
 
-	logrus.Println("APP is shutting down")
-	if err := server.Shutdown(context.Background()); err != nil {
-		logrus.Errorf("Error occured on server shutting down: %s", err.Error())
+	ctx, cancel := context.WithTimeout(context.Background(), wait)
+	defer cancel()
+
+	if err = server.Shutdown(ctx); err != nil {
+		panic(err)
 	}
 
-	if err := db.Close(); err != nil {
-		logrus.Errorf("Error occured on dateabase closing: %s", err.Error())
-	}
-
+	fmt.Println("Server was successful shutdown.")
 }
 
 func initConfig() error {

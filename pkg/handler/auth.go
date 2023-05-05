@@ -1,9 +1,9 @@
 package handler
 
 import (
-	"fmt"
 	"github.com/aalmat/e-commerce/models"
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 	"net/http"
 )
 
@@ -11,6 +11,13 @@ func (h *Handler) signUp(ctx *gin.Context) {
 	var input models.User
 	if err := ctx.BindJSON(&input); err != nil {
 		newErrorResponse(ctx, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	if err := h.validate.Struct(input); err != nil {
+		for _, err := range err.(validator.ValidationErrors) {
+			newErrorResponse(ctx, http.StatusBadRequest, err.Error())
+		}
 		return
 	}
 
@@ -25,13 +32,8 @@ func (h *Handler) signUp(ctx *gin.Context) {
 
 }
 
-type SignUser struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
-}
-
 func (h *Handler) signIn(ctx *gin.Context) {
-	var input SignUser
+	var input models.SignUser
 	if err := ctx.BindJSON(&input); err != nil {
 		newErrorResponse(ctx, http.StatusBadRequest, err.Error())
 		return
@@ -46,34 +48,3 @@ func (h *Handler) signIn(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, map[string]interface{}{"token": token})
 
 }
-
-// store invalidated tokens in a map
-var blacklist map[string]bool
-
-// function to invalidate a token
-func invalidateToken(token string) error {
-	// check if token already exists in the blacklist
-	if blacklist[token] {
-		return fmt.Errorf("Token already invalidated")
-	}
-	// add token to blacklist
-	blacklist[token] = true
-	return nil
-}
-
-// handler for logout endpoint
-//func logoutHandler(ctx *gin.Context) {
-//	header := ctx.GetHeader(Authorization)
-//	if header == "" {
-//		newErrorResponse(ctx, http.StatusBadRequest, "header is empty")
-//	}
-//
-//	headers := strings.Split(header, " ")
-//	if len(headers) != 2 {
-//		newErrorResponse(ctx, http.StatusBadRequest, "wrong header format")
-//	}
-//
-//	token := headers[1]
-//
-//
-//}

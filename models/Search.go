@@ -1,5 +1,5 @@
 package models
 
 type Search struct {
-	Keyword string `json:"keyword" binding: required`
+	Keyword string `json:"keyword" validate:"required"`
 }
