@@ -9,12 +9,7 @@ import (
 
 func (h *Handler) SearchByName(ctx *gin.Context) {
 
-	var search models.Search
-
-	if err := ctx.BindJSON(&search); err != nil {
-		newErrorResponse(ctx, http.StatusBadRequest, err.Error())
-		return
-	}
+	search := ctx.Query("search")
 
 	products, err := h.service.Product.SearchByName(search)
 	if err != nil {
@@ -48,6 +43,7 @@ func (h *Handler) GetProductById(ctx *gin.Context) {
 	product, err := h.service.Product.GetById(uint(productId))
 	if err != nil {
 		newErrorResponse(ctx, http.StatusInternalServerError, err.Error())
+		return
 	}
 
 	ctx.JSON(http.StatusOK, product)
@@ -61,7 +57,6 @@ func (h *Handler) ViewComment(ctx *gin.Context) {
 		newErrorResponse(ctx, http.StatusBadRequest, err.Error())
 		return
 	}
-
 	res, err := h.service.Product.ViewComment(uint(uid))
 	if err != nil {
 		newErrorResponse(ctx, http.StatusBadRequest, err.Error())
@@ -69,5 +64,52 @@ func (h *Handler) ViewComment(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, res)
+
+}
+
+func (h *Handler) ViewSeller(ctx *gin.Context) {
+	id := ctx.Param("id")
+	uid, err := strconv.ParseUint(id, 10, 64)
+
+	if err != nil {
+		newErrorResponse(ctx, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	res, err := h.service.Product.ViewSeller(uint(uid))
+	if err != nil {
+		newErrorResponse(ctx, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	ctx.JSON(http.StatusOK, map[string]interface{}{
+		"data": res,
+	})
+}
+
+func (h *Handler) FilterByPrice(ctx *gin.Context) {
+	minPriceStr := ctx.Query("min_price")
+	minPrice, err := strconv.ParseUint(minPriceStr, 10, 64)
+	if err != nil {
+		newErrorResponse(ctx, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	maxPriceStr := ctx.Query("max_price")
+	maxPrice, err := strconv.ParseUint(maxPriceStr, 10, 64)
+	if err != nil {
+		newErrorResponse(ctx, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	res, err := h.service.FilterByPrice(uint(minPrice), uint(maxPrice))
+	if err != nil {
+		newErrorResponse(ctx, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	ctx.JSON(http.StatusOK, map[string]interface{}{
+		"result": res,
+	})
 
 }

@@ -20,10 +20,12 @@ type Seller interface {
 }
 
 type Product interface {
-	GetAll() ([]models.Product, error)
-	GetById(productId uint) (models.Product, error)
-	SearchByName(search models.Search) ([]models.Product, error)
+	GetAll() ([]models.ProductResponse, error)
+	GetById(productId uint) (models.ProductResponse, error)
+	SearchByName(search string) ([]models.ProductResponse, error)
 	ViewComment(productId uint) ([]models.CommentUser, error)
+	ViewSeller(sellerId uint) ([]models.SellerResponse, error)
+	FilterByPrice(min, max uint) ([]models.ProductResponse, error)
 }
 
 type Client interface {

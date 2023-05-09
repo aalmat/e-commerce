@@ -7,16 +7,16 @@ import (
 
 type Product struct {
 	gorm.Model
-	Title       string `json:"title" validate:"required,min=3"`
+	Title       string `json:"title" validate:"required,min=3" gorm:"not null;unique"`
 	Description string `json:"description" validate:"required,min=3""`
 	Photo       string `json:"photo" validate:"required"`
-	Quantity    uint   `json:"quantity" validate:"required,gte=1"`
+	Quantity    uint   `json:"quantity"`
 	Rating      uint   `json:"rating"`
 }
 
 type ProductUpdate struct {
-	Title       string `json:"title" validate:"min=3"`
-	Description string `json:"description" validate:"min=3""`
+	Title       string `json:"title"`
+	Description string `json:"description"`
 	Photo       string `json:"photo"`
 }
 
@@ -29,4 +29,10 @@ func (p *ProductUpdate) Validate() error {
 		return errors.New("Nothing to change")
 	}
 	return nil
+}
+
+type ProductResponse struct {
+	Product    Product
+	WareHouses []WareHouse
+	Comments   []CommentUser
 }

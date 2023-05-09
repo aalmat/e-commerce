@@ -56,7 +56,7 @@ func main() {
 		}
 	}()
 
-	go repos.Admin.CheckOrders(tickInterval)
+	go services.Admin.CheckOrder(tickInterval)
 
 	// Graceful Shutdown
 	var wait time.Duration

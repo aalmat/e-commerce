@@ -15,13 +15,13 @@ type SellerPostgres struct {
 func (p *SellerPostgres) DeleteProduct(sellerId, productId uint) error {
 	tx := p.db.Begin()
 	//var wh models.WareHouse
-	if err := tx.Where("id=? and user_id=?", productId, sellerId).Delete(&models.WareHouse{}).Error; err != nil {
-		fmt.Println(1)
+	if err := tx.Where("product_id=?", productId).Delete(&models.Cart{}).Error; err != nil && !gorm.IsRecordNotFoundError(err) {
+		fmt.Println(2)
 		tx.Rollback()
 		return err
 	}
-	if err := tx.Where("product_id=?", productId).Delete(&models.Cart{}).Error; err != nil && !gorm.IsRecordNotFoundError(err) {
-		fmt.Println(2)
+	if err := tx.Where("id=? and user_id=?", productId, sellerId).Delete(&models.WareHouse{}).Error; err != nil {
+		fmt.Println(1)
 		tx.Rollback()
 		return err
 	}

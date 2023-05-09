@@ -3,10 +3,15 @@ package service
 import (
 	"github.com/aalmat/e-commerce/models"
 	"github.com/aalmat/e-commerce/pkg/repository"
+	"time"
 )
 
 type AdminService struct {
 	repository repository.Admin
+}
+
+func (a *AdminService) CheckOrder(tickInterval time.Duration) {
+	a.repository.CheckOrders(tickInterval)
 }
 
 func (a *AdminService) SaveOrder(order models.Order) error {

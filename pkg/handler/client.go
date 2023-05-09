@@ -4,6 +4,7 @@ import (
 	"errors"
 	"github.com/aalmat/e-commerce/models"
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 	"github.com/sirupsen/logrus"
 	"net/http"
 	"strconv"
@@ -38,7 +39,7 @@ func (h *Handler) AddToCart(ctx *gin.Context) {
 		return
 	}
 
-	id := ctx.Param("id")
+	id := ctx.Param("ware_id")
 	uid, err := strconv.ParseUint(id, 10, 64)
 	if err != nil {
 		newErrorResponse(ctx, http.StatusBadRequest, err.Error())
@@ -111,7 +112,7 @@ func (h *Handler) DeleteFromCart(ctx *gin.Context) {
 		return
 	}
 
-	id := ctx.Param("id")
+	id := ctx.Param("cart_id")
 	uid, err := strconv.ParseUint(id, 10, 64)
 	if err != nil {
 		newErrorResponse(ctx, http.StatusBadRequest, err.Error())
@@ -149,7 +150,7 @@ func (h *Handler) ChangeProductQuantity(ctx *gin.Context) {
 		return
 	}
 
-	id := ctx.Param("id")
+	id := ctx.Param("cart_id")
 	uid, err := strconv.ParseUint(id, 10, 64)
 	if err != nil {
 		newErrorResponse(ctx, http.StatusBadRequest, err.Error())
@@ -254,6 +255,13 @@ func (h *Handler) RateProduct(ctx *gin.Context) {
 		return
 	}
 
+	if err := h.validate.Struct(rate); err != nil {
+		for _, err := range err.(validator.ValidationErrors) {
+			newErrorResponse(ctx, http.StatusBadRequest, err.Error())
+		}
+		return
+	}
+
 	rate.ProductId = uint(productId)
 	rate.UserId = userId
 	rateId, err := h.service.Client.RateProduct(rate)
@@ -309,7 +317,7 @@ func (h *Handler) PurchaseById(ctx *gin.Context) {
 		return
 	}
 
-	id := ctx.Param("id")
+	id := ctx.Param("cart_id")
 	uid, err := strconv.ParseUint(id, 10, 64)
 	if err != nil {
 		newErrorResponse(ctx, http.StatusBadRequest, err.Error())

@@ -24,10 +24,10 @@ func (c *ClientPostgres) PurchaseAll(userId uint) error {
 		return err
 	}
 
-	fmt.Println("whs ", whs)
+	//fmt.Println("whs ", whs)
 
 	for i := range whs {
-		if err := c.PurchaseById(userId, whs[i].ProductID); err != nil {
+		if err := c.PurchaseById(userId, whs[i].ID); err != nil {
 			tx.Rollback()
 			return err
 		}
@@ -41,31 +41,37 @@ func (c *ClientPostgres) PurchaseAll(userId uint) error {
 	return nil
 }
 
-func (c *ClientPostgres) PurchaseById(userId uint, whId uint) error {
+func (c *ClientPostgres) PurchaseById(userId uint, cartId uint) error {
 	tx := c.db.Begin()
 
-	var wh models.Cart
-	if err := tx.Where("user_id=? and product_id=?", userId, whId).First(&wh).Error; err != nil {
-		return errors.New(fmt.Sprintf("error selecting cart with id %d", wh.ID))
+	var cart models.Cart
+	if err := tx.Where("user_id=? and id=?", userId, cartId).First(&cart).Error; err != nil {
+		return errors.New(fmt.Sprintf("error selecting cart with id %d", cart.ID))
 	}
 
-	Order := c.CartToOrder(wh)
+	Order := c.CartToOrder(cart)
 
-	if err := tx.Select("user_id", "product_id", "quantity", "delivery_date", "status", "created_at", "updated_at").Create(&Order).Error; err != nil {
+	if err := tx.Select("user_id", "ware_house_id", "quantity", "delivery_date", "status", "created_at", "updated_at").Create(&Order).Error; err != nil {
 		tx.Rollback()
 		return errors.New(fmt.Sprintf("error adding product with is %d", Order.ID))
 	}
 
-	if err := c.ChangeWhQuantity(whId, wh.Quantity); err != nil {
-		tx.Rollback()
-		return err
-	}
-	if err := c.ChangePrQuantity(whId, wh.Quantity); err != nil {
+	if err := c.ChangeWhQuantity(cart.WareHouseID, cart.Quantity); err != nil {
 		tx.Rollback()
 		return err
 	}
 
-	if err := c.DeleteFromCart(userId, whId); err != nil {
+	var product models.WareHouse
+	if err := tx.Where("id=?", cart.WareHouseID).First(&product).Error; err != nil {
+		return errors.New(fmt.Sprintf("error selecting cart with id %d", cart.ID))
+	}
+
+	if err := c.ChangePrQuantity(product.ProductId, cart.Quantity); err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	if err := c.DeleteFromCart(userId, cartId); err != nil {
 		tx.Rollback()
 		return err
 	}
@@ -81,7 +87,7 @@ func (c *ClientPostgres) PurchaseById(userId uint, whId uint) error {
 
 func (c *ClientPostgres) ChangeWhQuantity(productId, subs uint) error {
 	var wh models.WareHouse
-	if err := c.db.Where("product_id=?", productId).First(&wh).Error; err != nil {
+	if err := c.db.Where("id=?", productId).First(&wh).Error; err != nil {
 		return err
 	}
 
@@ -124,7 +130,7 @@ func (c *ClientPostgres) CartToOrder(wh models.Cart) models.Order {
 	Order.CreatedAt = time.Now()
 	Order.Quantity = wh.Quantity
 	Order.UpdatedAt = wh.UpdatedAt
-	Order.ProductID = wh.ProductID
+	Order.WareHouseID = wh.WareHouseID
 	Order.UserID = wh.UserID
 	Order.Status = false
 
@@ -214,10 +220,10 @@ func (c *ClientPostgres) WriteComment(comment models.Commentary) (uint, error) {
 	return comment.ID, nil
 }
 
-func (c *ClientPostgres) ChangeProductQuantity(userid uint, productId uint, quantity uint) (uint, error) {
+func (c *ClientPostgres) ChangeProductQuantity(userid uint, cartId uint, quantity uint) (uint, error) {
 	var cartItem models.Cart
 	cartItem.UserID = userid
-	cartItem.ProductID = productId
+	cartItem.ID = cartId
 	if err := c.db.First(&cartItem).Error; err != nil {
 		return 0, nil
 	}
@@ -248,7 +254,7 @@ func (c *ClientPostgres) AddToCart(userId uint, whId uint, quantity uint) (uint,
 	}
 
 	var item models.Cart
-	err := tx.Where("user_id=? and product_id=?", userId, wh.ProductId).First(&item).Error
+	err := tx.Where("user_id=? and ware_house_id=?", userId, wh.ID).First(&item).Error
 	if !gorm.IsRecordNotFoundError(err) && err != nil {
 		tx.Rollback()
 		return 0, err
@@ -256,10 +262,10 @@ func (c *ClientPostgres) AddToCart(userId uint, whId uint, quantity uint) (uint,
 
 	if gorm.IsRecordNotFoundError(err) {
 
-		item = models.Cart{UserID: userId, ProductID: wh.ProductId, Quantity: quantity}
+		item = models.Cart{UserID: userId, WareHouseID: wh.ID, Quantity: quantity}
 		item.UpdatedAt = time.Now()
 		item.CreatedAt = time.Now()
-		if err := tx.Select("user_id", "product_id", "quantity", "created_at", "updated_at").Create(&item).Error; err != nil {
+		if err := tx.Select("user_id", "ware_house_id", "quantity", "created_at", "updated_at").Create(&item).Error; err != nil {
 			tx.Rollback()
 			return 0, err
 		}
@@ -277,18 +283,18 @@ func (c *ClientPostgres) AddToCart(userId uint, whId uint, quantity uint) (uint,
 func (c *ClientPostgres) ShowCartProducts(userId uint) ([]models.CartInfo, error) {
 	var whs []models.CartInfo
 
-	if err := c.db.Table("ware_houses").Select("distinct on (product_id) ware_houses.product_id, ware_houses.user_id, ware_houses.price, ware_houses.created_at, ware_houses.id, carts.quantity").Joins("inner join carts on ware_houses.product_id = carts.product_id").Where("carts.user_id=? and carts.deleted_at is null", userId).Scan(&whs).Error; err != nil {
+	if err := c.db.Table("ware_houses").Select("distinct on (ware_house_id) carts.id as cart_id, ware_houses.product_id, ware_houses.user_id, ware_houses.price, ware_houses.created_at, ware_houses.id, carts.quantity").Joins("inner join carts on ware_houses.id = carts.ware_house_id").Where("carts.user_id=? and carts.deleted_at is null", userId).Scan(&whs).Error; err != nil {
 		return nil, err
 	}
 
 	return whs, nil
 }
 
-func (c *ClientPostgres) DeleteFromCart(userId, productId uint) error {
+func (c *ClientPostgres) DeleteFromCart(userId, cartId uint) error {
 	tx := c.db.Begin()
-	cart := models.Cart{UserID: userId, ProductID: productId}
+	cart := models.Cart{}
 
-	if err := tx.Where("user_id = ? AND product_id = ?", cart.UserID, cart.ProductID).Delete(&cart).Error; err != nil {
+	if err := tx.Where("user_id = ? AND id = ?", userId, cartId).Delete(&cart).Error; err != nil {
 		tx.Rollback()
 		return err
 	}

@@ -1,7 +1,7 @@
 package models
 
 type GetAllListsResponse struct {
-	Data []Product `json:"data"`
+	Data []ProductResponse `json:"data"`
 }
 
 type GetAllWareHousesResponse struct {
