@@ -30,7 +30,9 @@ func (a *AuthPostgres) CreateUser(user models.User) (uint, error) {
 
 	user.CreatedAt, user.UpdatedAt = time.Now(), time.Now()
 
-	a.db.Select("created_at", "updated_at", "first_name", "last_name", "phone", "user_type", "email", "password", "cart").Create(&user)
+	if err := a.db.Select("created_at", "updated_at", "first_name", "last_name", "phone", "user_type", "email", "password", "cart").Create(&user).Error; err != nil {
+		return 0, err
+	}
 	return user.ID, nil
 }
 

@@ -12,6 +12,6 @@ type WareHouse struct {
 
 type UpdateWareHouse struct {
 	WhId     uint `json:"ware_id"`
-	Quantity uint `json:"quantity" validate:"required,min=30"`
-	Price    uint `json:"price" validate:"min=5"`
+	Quantity uint `json:"quantity"`
+	Price    uint `json:"price"`
 }

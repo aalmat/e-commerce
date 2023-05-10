@@ -45,6 +45,7 @@ func (p *SellerPostgres) UpdateProduct(sellerId uint, update models.UpdateWareHo
 
 	if update.Price != 0 {
 		wh.Price = update.Price
+		//fmt.Println(wh.Price)
 	}
 	if update.Quantity != 0 {
 		wh.Quantity = update.Quantity

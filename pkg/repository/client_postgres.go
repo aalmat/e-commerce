@@ -50,7 +50,9 @@ func (c *ClientPostgres) PurchaseById(userId uint, cartId uint) error {
 	}
 
 	Order := c.CartToOrder(cart)
-
+	if err := c.db.Table("ware_houses").Select("price").Where("id = ? and user_id=?", cart.WareHouseID, cart.UserID).Scan(&Order.Price).Error; err != nil {
+		return err
+	}
 	if err := tx.Select("user_id", "ware_house_id", "quantity", "delivery_date", "status", "created_at", "updated_at").Create(&Order).Error; err != nil {
 		tx.Rollback()
 		return errors.New(fmt.Sprintf("error adding product with is %d", Order.ID))
